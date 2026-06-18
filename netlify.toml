@@ -1,0 +1,8 @@
+# Netlify build configuration for the Vite app.
+# With this committed, Netlify auto-configures the build (no manual settings needed).
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
