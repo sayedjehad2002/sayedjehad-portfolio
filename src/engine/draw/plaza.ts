@@ -142,7 +142,7 @@ export function drawPlaza(vp: Viewport, world: { player: Entity; npc: Entity; lo
   drawTree(ctx, 72, 250);
   drawTree(ctx, 408, 250);
   drawFeeder(ctx, 110, 380);
-  drawAboutBoard(ctx, 56, 344);
+  // (the plaza About board was removed — the in-studio About station is now the single "About Sayed")
   drawBench(ctx, 294, 272);
   drawLantern(vp, 96, 300);
   drawLantern(vp, 374, 300);
@@ -653,11 +653,15 @@ function drawBrandSign(ctx: CanvasRenderingContext2D): void {
   R(ctx, 265, 38, 1, 16, P.wood.dark); // shadow right edge
   R(ctx, 214, 51, 52, 3, P.wood.dark); // shadow bottom bevel
   // recessed carved emblem with a soft inset
-  R(ctx, 235, 41, 10, 10, P.wood.dark);
-  R(ctx, 236, 42, 8, 8, P.accent.teal);
+  R(ctx, 235, 41, 10, 10, P.wood.dark); // recessed frame
+  R(ctx, 236, 42, 8, 8, P.accent.teal); // emblem field
   R(ctx, 236, 42, 8, 1, P.glow.cyan); // emblem top catch-light
-  R(ctx, 238, 44, 4, 4, P.accent.golden);
-  R(ctx, 238, 44, 2, 2, '#FFE6A8'); // golden glint
+  // a small house glyph so the entrance sign reads as "the studio", not an abstract square
+  R(ctx, 239, 42, 2, 1, P.accent.golden); // roof peak
+  R(ctx, 238, 43, 4, 1, P.accent.golden); // roof
+  R(ctx, 238, 44, 4, 4, P.accent.golden); // walls
+  R(ctx, 239, 46, 2, 2, P.accent.tealDeep); // door
+  R(ctx, 238, 43, 1, 1, '#FFE6A8'); // tiny roof glint
   drawDoorAwning(ctx);
 }
 
@@ -701,7 +705,12 @@ function drawWelcomeMat(ctx: CanvasRenderingContext2D, x: number, y: number): vo
   R(ctx, x + 2, y + 5, 44, 1, '#7A4527'); // horizontal weft
   R(ctx, x + 2, y + 9, 44, 1, '#7A4527');
   ctx.restore();
-  for (let i = 0; i < 3; i++) R(ctx, x + 8 + i * 14, y + 5, 10, 1, P.accent.golden);
+  // golden coir motif: a centred diamond flanked by two short bars (varied, not 3 identical stripes)
+  R(ctx, x + 6, y + 5, 9, 1, P.accent.golden);
+  R(ctx, x + 33, y + 5, 9, 1, P.accent.golden);
+  R(ctx, x + 23, y + 4, 2, 1, P.accent.golden);
+  R(ctx, x + 22, y + 5, 4, 1, P.accent.golden);
+  R(ctx, x + 23, y + 6, 2, 1, P.accent.golden);
 }
 
 function drawPlanter(ctx: CanvasRenderingContext2D, x: number, y: number): void {
@@ -869,6 +878,8 @@ function drawFeeder(ctx: CanvasRenderingContext2D, x: number, y: number): void {
 
 // A cozy wooden signboard on the left lawn that introduces Sayed (the About beat).
 // (x, y) is the base centre; the panel stands above it. Drawn with the lawn props.
+// NOTE: currently unused — the plaza About board was removed in favour of the single
+// in-studio About station; kept for reference (tree-shaken out of the production bundle).
 function drawAboutBoard(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   const LT = P.wood.light;
   const MID = P.wood.mid;

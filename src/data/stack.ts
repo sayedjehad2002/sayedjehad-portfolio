@@ -4,6 +4,8 @@ export interface Tool {
 }
 
 export const STACK: Tool[] = [
+  { name: 'React', desc: 'Component UI architecture' },
+  { name: 'TypeScript', desc: 'Typed, maintainable code' },
   { name: 'Lovable', desc: 'Rapid AI app building' },
   { name: 'Claude Code', desc: 'Agentic coding partner' },
   { name: 'Supabase', desc: 'Postgres, auth & APIs' },

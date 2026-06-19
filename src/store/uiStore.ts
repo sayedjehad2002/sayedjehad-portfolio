@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { SceneId } from '../engine/types';
 
-export type ModalKind = 'project' | 'stack' | 'resume' | 'about';
+export type ModalKind = 'project' | 'stack' | 'resume' | 'about' | 'arcade';
 
 export interface ModalState {
   kind: ModalKind;
@@ -66,4 +66,9 @@ export const useUiStore = create<UiState>((set) => ({
 // Convenience selector for "is a blocking overlay open" (engine pauses input).
 export function isOverlayOpen(s: UiState): boolean {
   return s.dialogue !== null || s.conversation !== null || s.modal !== null || !s.started;
+}
+
+// Dev-only: expose the store for local visual debugging (stripped from prod builds).
+if (import.meta.env.DEV) {
+  (window as unknown as { useUiStore?: typeof useUiStore }).useUiStore = useUiStore;
 }

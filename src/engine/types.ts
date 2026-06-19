@@ -26,7 +26,7 @@ export interface Entity {
   bob: number; // idle bob phase
 }
 
-export type InteractType = 'talk' | 'lore' | 'about' | 'project' | 'stack' | 'resume' | 'water';
+export type InteractType = 'talk' | 'lore' | 'about' | 'project' | 'stack' | 'resume' | 'water' | 'arcade';
 
 export type PhaseAccent = 'sales' | 'hr' | 'aidev' | 'teal' | 'amber';
 

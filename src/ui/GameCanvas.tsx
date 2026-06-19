@@ -9,6 +9,7 @@ export function GameCanvas() {
   useEffect(() => {
     if (!canvasRef.current) return;
     const engine = new Engine(canvasRef.current);
+    if (import.meta.env.DEV) (window as unknown as { engine?: Engine }).engine = engine;
     engine.start();
     return () => engine.stop();
   }, []);

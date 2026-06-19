@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useUiStore } from '../store/uiStore';
 import { CHARACTER } from '../data/character';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { blip } from '../engine/audio';
 
-const SPEED = 38; // chars per second
+const SPEED = 60; // chars per second (snappy; any key reveals the rest of the line instantly)
 
 export function DialogueBar() {
   const dialogue = useUiStore((s) => s.dialogue);
@@ -13,6 +13,7 @@ export function DialogueBar() {
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState(0);
+  const twRef = useRef<number | null>(null); // running typewriter interval id (cleared on reveal so it sticks)
 
   const lines = dialogue?.lines ?? [];
   const line = lines[index] ?? '';
@@ -35,12 +36,14 @@ export function DialogueBar() {
       setShown(n);
       if (n >= line.length) window.clearInterval(id);
     }, 1000 / SPEED);
+    twRef.current = id;
     return () => window.clearInterval(id);
   }, [dialogue, index, line, reduced]);
 
   const advance = useCallback(() => {
     if (!dialogue) return;
     if (shown < line.length) {
+      if (twRef.current !== null) window.clearInterval(twRef.current); // stop the typewriter so the reveal sticks
       setShown(line.length);
       return;
     }
@@ -94,9 +97,10 @@ export function DialogueBar() {
               {line.slice(0, shown)}
               {typing && <span className="caret font-pixel text-amber">▋</span>}
             </p>
-            {/* announce the whole line once to screen readers, not char-by-char */}
-            <p className="sr-only" aria-live="polite">
-              {line}
+            {/* announce each full line once to screen readers, gated on !typing so the
+                spoken text matches the visible typewriter (mirrors ConversationPanel) */}
+            <p key={index} className="sr-only" aria-live="polite" aria-atomic="true">
+              {!typing ? line : ''}
             </p>
           </div>
         </button>

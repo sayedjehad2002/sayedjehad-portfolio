@@ -14,7 +14,7 @@ export function SoundToggle() {
 
   return (
     <button
-      aria-label={muted ? 'Unmute sound' : 'Mute sound'}
+      aria-label="Mute sound"
       aria-pressed={muted}
       onClick={onClick}
       className="ui-chip ui-chip-btn ui-focus-dark fixed bottom-4 right-4 z-30"

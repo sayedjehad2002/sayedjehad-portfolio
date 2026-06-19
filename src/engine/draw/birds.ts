@@ -1,5 +1,5 @@
 import { R, softShadow, type Viewport } from '../render';
-import { hopOffset, BIRD_TUNING, type BirdsState, type Bird } from '../systems/birds';
+import { hopOffset, BIRD_TUNING, type Bird } from '../systems/birds';
 
 // Harmonized to the wood/teal/golden palette: sparrow / robin / one teal-accent finch.
 const TONES = [
@@ -8,11 +8,8 @@ const TONES = [
   { body: '#1FA89C', belly: '#C4925A', wing: '#14756C', beak: '#FFCF6E', eye: '#241A10' },
 ] as const;
 
-export function drawBirds(vp: Viewport, state: BirdsState): void {
-  const order = [...state.birds].sort((a, b) => a.y - b.y);
-  for (const b of order) drawBird(vp, b);
-}
-
+// (drawBirds removed: the plaza inlines its own y-sort and calls drawBird per bird, so the
+// batch export was dead code that pulled an extra per-call array spread + sort.)
 export function drawBird(vp: Viewport, b: Bird): void {
   const ctx = vp.ctx;
   const t = TONES[b.tone];

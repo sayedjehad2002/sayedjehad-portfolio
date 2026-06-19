@@ -170,6 +170,16 @@ export function ResumeDossier() {
         <span className="font-sans text-[12px] text-ink-faint">{EDUCATION}</span>
         <div className="flex flex-wrap items-center gap-2">
           <a
+            href={`mailto:${CONTACT.email}`}
+            className="ui-focus-panel inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 font-sans text-[13px] font-semibold text-teal-deep transition-colors duration-150 hover:border-teal/60 hover:bg-sunken"
+          >
+            Email
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m4 7 8 5 8-5" />
+            </svg>
+          </a>
+          <a
             href={LINKEDIN}
             target="_blank"
             rel="noopener noreferrer"

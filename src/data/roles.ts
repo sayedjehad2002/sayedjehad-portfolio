@@ -97,7 +97,7 @@ export const PHASES: Phase[] = [
           "Built and deployed careers.lumofy.ai, Lumofy's public careers page for candidates to browse roles and apply.",
           'Built and deployed Lumofy Pulse, a company-wide HR attendance and leave system, now the primary internal tool.',
           'Delivered two L&D tools: a Dispatching tool for SCORM & proxy provisioning, and an AI Curator for course development.',
-          'Sole developer across 5 live internal projects, owning each from requirements through to production deployment.',
+          'Sole developer across 4 live projects, one public site and three internal tools, owning each from requirements through to production deployment.',
           'Works across a modern AI-powered stack: Lovable, Claude Code, Supabase, Firebase, Vercel, and Netlify.',
         ],
       },

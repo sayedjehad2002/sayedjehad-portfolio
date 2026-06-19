@@ -1,5 +1,5 @@
 import { palette as P } from '../../theme/palette';
-import { R, softShadow, type Viewport } from '../render';
+import { R, softShadow, pix, type Viewport } from '../render';
 import type { Entity } from '../types';
 import { drawRecruiter } from './sprites';
 
@@ -23,18 +23,30 @@ const motes: Mote[] = Array.from({ length: 9 }, (_, i) => ({ x: 40 + ((i * 53) %
 // Their shape is fixed per source, so build once and reuse (only globalAlpha varies),
 // avoiding a createRadialGradient allocation per source per frame.
 const gradCache = new Map<string, CanvasGradient>();
+// Fixed attract-screen target offsets (relative to the CRT origin); hoisted so the
+// cabinet attract loop allocates no per-frame array.
+const ATTRACT_SLOT_OFFSETS: ReadonlyArray<readonly [number, number]> = [
+  [3, 3],
+  [10, 2],
+  [15, 8],
+];
 
 // Additive warm light pool / interactable glow.
 function pool(vp: Viewport, x: number, y: number, r: number, color: string, alpha: number): void {
   if (vp.reduced) alpha *= 0.7;
   const ctx = vp.ctx;
+  // PERF: quantize the (often animated, e.g. r = 30 + Math.sin(t)) radius so the cache key
+  // saturates instead of missing every frame. Without this, createRadialGradient runs every
+  // frame and gradCache grows unbounded. Use rr for the key, the gradient, AND the arc so the
+  // gradient stops (fractions of their own radius) line up with the filled disc.
+  const rr = Math.round(r);
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   ctx.globalAlpha = Math.max(0, alpha);
-  const key = 'p' + x + ',' + y + ',' + r + ',' + color;
+  const key = 'p' + x + ',' + y + ',' + rr + ',' + color;
   let g = gradCache.get(key);
   if (!g) {
-    g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g = ctx.createRadialGradient(x, y, 0, x, y, rr);
     g.addColorStop(0, color);
     g.addColorStop(0.5, color);
     g.addColorStop(1, 'rgba(255,255,255,0)');
@@ -42,9 +54,39 @@ function pool(vp: Viewport, x: number, y: number, r: number, color: string, alph
   }
   ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.arc(x, y, rr, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
+}
+
+// A small framed "About / who I am" portrait on a wood easel, so the story (and the
+// contact actions inside the About panel) are reachable from the main studio room, not
+// only the outdoor plaza. A tertiary indigo glow marks it interactable (same tier as
+// the tech shelf / water cooler).
+function drawAboutStand(vp: Viewport, x: number, y: number): void {
+  const ctx = vp.ctx;
+  softShadow(ctx, x, y + 3, 16, P.shadowSoft);
+  pool(vp, x, y - 16, vp.reduced ? 22 : 22 + 2 * Math.sin(vp.t * 1.5), P.accent.indigo, 0.13 + (vp.reduced ? 0 : 0.05 * Math.sin(vp.t * 1.5)));
+  // easel legs
+  R(ctx, x - 9, y - 4, 3, 9, P.wood.dark);
+  R(ctx, x + 6, y - 4, 3, 9, P.wood.dark);
+  R(ctx, x - 1, y - 3, 3, 8, P.wood.mid);
+  // frame
+  const fw = 26;
+  const fh = 30;
+  const fx = x - fw / 2;
+  const fy = y - 6 - fh;
+  R(ctx, fx - 2, fy - 2, fw + 4, fh + 4, P.wood.mid);
+  R(ctx, fx - 2, fy - 2, fw + 4, 2, P.wood.light); // top highlight edge
+  R(ctx, fx, fy, fw, fh, '#EDE6F4'); // soft lavender mat
+  // bust silhouette (reads as "profile / person")
+  ctx.fillStyle = P.accent.indigo;
+  ctx.beginPath();
+  ctx.arc(x, fy + 12, 5, 0, Math.PI * 2); // head
+  ctx.fill();
+  R(ctx, fx + 5, fy + 19, fw - 10, 9, P.accent.indigo); // shoulders
+  R(ctx, x - 3, fy + 9, 2, 2, 'rgba(255,255,255,0.4)'); // cheek catch-light
+  R(ctx, fx + 4, fy + fh - 4, fw - 8, 2, '#C9B8E2'); // little nameplate bar
 }
 
 export function drawStudio(vp: Viewport, world: { player: Entity; drinking?: boolean; drinkT?: number }): void {
@@ -59,6 +101,7 @@ export function drawStudio(vp: Viewport, world: { player: Entity; drinking?: boo
   drawFloor(ctx);
   drawWindowSpill(vp);
   drawRug(ctx, 150, 196, 170, 100);
+  drawPlayRug(ctx, 34, 270, 100, 32); // warm rug grounding the left "Break & Play" cluster (clear of the central desk rug at x150)
   drawDoormat(ctx, 211, 300);
   drawWalls(ctx);
   drawWindow(ctx, 28, 120);
@@ -73,6 +116,7 @@ export function drawStudio(vp: Viewport, world: { player: Entity; drinking?: boo
   // wall decor on the top wall + the non-walkable gallery band (behind the
   // sealed counter), drawn before the counter/easels so they layer on top.
   drawWallDecor(vp);
+  drawPlayWall(ctx); // left-wall poster + tiny high-score board marking the Play zone
 
   // zone props
   drawCounter(ctx, 60, 96, 360);
@@ -82,14 +126,15 @@ export function drawStudio(vp: Viewport, world: { player: Entity; drinking?: boo
   drawCareerWall(ctx, 196, 150);
   drawDeskAndBook(vp, 208, 212);
   drawTechShelf(vp, 386, 178);
-  drawFloorLamp(ctx, 132, 176);
   drawDeskLamp(vp, 196, 206);
   drawPotPlant(ctx, 36, 60);
   drawPotPlant(ctx, 416, 60);
-  drawFern(ctx, 44, 252);
-  drawWaterCooler(vp, 44, 256, world.drinking ?? false, world.drinkT ?? 0);
+  drawFern(ctx, 116, 250);
+  drawWaterCooler(vp, 92, 246, world.drinking ?? false, world.drinkT ?? 0);
   drawFlowerPot(ctx, 408, 300);
   drawCozyProps(ctx);
+  drawArcadeCabinet(vp, 38, 232);
+  drawAboutStand(vp, 360, 252); // in-studio "About / who I am" station (story + contact on the main route)
 
   // interactable glows (signature Moonlighter "superposition") + easels
   drawEasel(vp, 90, '#9A7BC0', P.accent.indigo);
@@ -103,6 +148,169 @@ export function drawStudio(vp: Viewport, world: { player: Entity; drinking?: boo
   drawVignette(vp);
 
   if (!vp.reduced) drawMotes(vp);
+}
+
+// Fills an arbitrary quad (used for the cabinet's angled 3/4 side + top faces).
+function quad(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number, c: string): void {
+  ctx.fillStyle = c;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.lineTo(x3, y3);
+  ctx.lineTo(x4, y4);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// A 3/4-view arcade cabinet that FACES RIGHT: the lit marquee + glowing CRT + the
+// control deck sit on the front face pointing into the room (toward the resume),
+// while the left side panel + top recede up-left for depth so it reads as a real
+// machine standing against the wall. (x, y) is the bounding top-left; ~42 wide x
+// ~54 tall. Reduced motion holds a static frame. Decorative only (never reads the
+// high score, which lives in the game overlay).
+function drawArcadeCabinet(vp: Viewport, x: number, y: number): void {
+  const ctx = vp.ctx;
+  const t = vp.t;
+  const D = 12; // side/top depth (recede up-left toward the wall)
+  const fx = x + D; // front face left
+  const fr = x + 42; // front face right
+  const fw = fr - fx; // 30
+  const fy = y + 8; // front face top
+  const fb = y + 54; // front face bottom
+
+  // floor contact shadow under the whole footprint
+  softShadow(ctx, x + 24, y + 55, 24, P.shadowSoft);
+  softShadow(ctx, x + 22, y + 55, 15, P.shadow);
+
+  // TOP face (recede up-left) + lit front lip
+  quad(ctx, fx, fy, fr, fy, fr - D, y + 2, x, y + 2, '#2F2820');
+  R(ctx, fx, fy, fw, 1, '#423826');
+
+  // LEFT SIDE panel (dark, recede up-left) + wood corner trim + teal side decal
+  quad(ctx, fx, fy, x, y + 2, x, fb - 6, fx, fb, '#1C160F');
+  R(ctx, fx - 1, fy, 1, fb - fy, '#5A3A22');
+  quad(ctx, fx - 2, fy + 16, x + 3, fy + 10, x + 3, fy + 30, fx - 2, fy + 36, '#16685F');
+
+  // FRONT FACE body (lit-left / shaded-right) — warm charcoal, not cold blue-black
+  R(ctx, fx, fy, fw, fb - fy, '#2A2218');
+  R(ctx, fx, fy, 2, fb - fy, '#3A2F20');
+  R(ctx, fr - 1, fy, 1, fb - fy, '#1C1610');
+
+  // MARQUEE (front-face top) + "ARCADE" wordmark
+  R(ctx, fx, fy, fw, 7, '#2E2438');
+  R(ctx, fx + 1, fy + 1, fw - 2, 5, '#F2E4C4');
+  R(ctx, fx + 1, fy + 1, fw - 2, 1, '#FFF4DA');
+  if (!vp.reduced && 0.5 + 0.5 * Math.sin(t * 9.3) > 0.86) R(ctx, fx + 1, fy + 1, fw - 2, 1, '#FFFDF0');
+  ctx.save();
+  ctx.fillStyle = '#16685F';
+  ctx.font = pix(5);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('ARCADE', fx + fw / 2, fy + 3);
+  ctx.restore();
+
+  // SCREEN bezel + CRT + scanlines + glow + attract loop
+  R(ctx, fx + 2, fy + 8, fw - 4, 19, '#0C0814');
+  const sx = fx + 4;
+  const sy = fy + 10;
+  const sw = fw - 8; // 22
+  const sh = 15;
+  R(ctx, sx, sy, sw, sh, '#08161A');
+  R(ctx, sx, sy, sw, 1, '#050E12');
+  R(ctx, sx, sy + sh - 1, sw, 1, '#04090C');
+  if (!vp.reduced) {
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = '#000000';
+    for (let yy = sy + 1; yy < sy + sh; yy += 2) ctx.fillRect(sx, yy, sw, 1);
+    ctx.restore();
+  }
+  pool(vp, sx + sw / 2, sy + sh / 2, 13, '#5FE0D0', vp.reduced ? 0.12 : 0.12 + 0.05 * Math.sin(t * 2.2));
+  drawCabinetAttract(vp, sx, sy, sw, sh);
+
+  // CONTROL DECK + joystick + four buttons (front face, lower)
+  R(ctx, fx, fy + 28, fw, 5, '#3A2E48');
+  R(ctx, fx, fy + 28, fw, 1, '#4A3C5C');
+  R(ctx, fx, fy + 33, fw, 1, '#140E1E');
+  R(ctx, fx + 4, fy + 30, 2, 2, '#9AA0B0');
+  R(ctx, fx + 4, fy + 29, 2, 1, '#D8643A');
+  R(ctx, fx + 11, fy + 30, 2, 2, '#39C0B0');
+  R(ctx, fx + 11, fy + 30, 2, 1, '#5FE0D0');
+  R(ctx, fx + 15, fy + 30, 2, 2, '#FFB454');
+  R(ctx, fx + 19, fy + 30, 2, 2, '#D8643A');
+  R(ctx, fx + 23, fy + 30, 2, 2, '#9A7BC0');
+
+  // COIN DOOR + kick base
+  R(ctx, fx + 8, fy + 36, 14, 7, '#2A2236');
+  R(ctx, fx + 8, fy + 36, 14, 1, '#3A3048');
+  R(ctx, fx + 10, fy + 38, 2, 1, '#5FE0D0');
+  R(ctx, fx + 12, fy + 41, 6, 1, '#100B18');
+  R(ctx, fx, fb - 2, fw, 2, '#140E1E');
+  R(ctx, fx, fb - 1, fw, 1, '#100B18');
+
+  // additive marquee glow + neon underglow
+  pool(vp, fx + fw / 2, fy + 2, 14, P.accent.golden, vp.reduced ? 0.16 : 0.16 + 0.05 * Math.sin(t * 1.6));
+  pool(vp, x + 24, y + 56, 24, '#39C0B0', vp.reduced ? 0.1 : 0.1 + 0.04 * Math.sin(t * 1.4));
+  pool(vp, x + 14, y + 56, 12, '#D8643A', vp.reduced ? 0.07 : 0.07 + 0.03 * Math.sin(t * 1.4 + 1.7));
+}
+
+// Arcade attract loop inside the CRT (sx, sy = screen top-left). Three fixed
+// target rings; a crosshair snap-aims across them with a brief hit flash; a
+// blinking PRESS E. Reduced motion parks the crosshair on the middle target.
+function drawCabinetAttract(vp: Viewport, sx: number, sy: number, sw: number, sh: number): void {
+  const ctx = vp.ctx;
+  const t = vp.t;
+  const reduced = vp.reduced;
+  for (let i = 0; i < 3; i++) {
+    const tx = sx + ATTRACT_SLOT_OFFSETS[i][0];
+    const ty = sy + ATTRACT_SLOT_OFFSETS[i][1];
+    R(ctx, tx, ty, 4, 1, '#39C0B0');
+    R(ctx, tx, ty + 3, 4, 1, '#39C0B0');
+    R(ctx, tx, ty, 1, 4, '#39C0B0');
+    R(ctx, tx + 3, ty, 1, 4, '#39C0B0');
+    R(ctx, tx + 1, ty + 1, 2, 2, '#5FE0D0');
+  }
+  const idx = reduced ? 1 : Math.floor(t * 0.8) % 3;
+  const cx = sx + ATTRACT_SLOT_OFFSETS[idx][0] + 2;
+  const cy = sy + ATTRACT_SLOT_OFFSETS[idx][1] + 2;
+  if (!reduced && (t * 0.8) % 1 < 0.18) {
+    R(ctx, cx - 1, cy - 1, 3, 3, '#D8643A');
+    pool(vp, cx, cy, 5, '#D8643A', 0.14);
+  }
+  R(ctx, cx - 3, cy, 7, 1, '#EAF7F4');
+  R(ctx, cx, cy - 3, 1, 7, '#EAF7F4');
+  R(ctx, cx, cy, 1, 1, '#08161A');
+  if (reduced || Math.sin(t * 3) > 0) R(ctx, sx + Math.round(sw / 2) - 6, sy + sh - 4, 12, 2, '#FFE08A');
+}
+
+// Warm amber rug grounding the left "Break & Play" cluster (arcade + cooler + lamp).
+// No additive glow on it, so the central desk spotlight stays the room's focal point.
+function drawPlayRug(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  R(ctx, x, y, w, h, '#6E4A28'); // border
+  R(ctx, x + 1, y + 1, w - 2, h - 2, '#8A5E38'); // field
+  R(ctx, x + 1, y + 1, w - 2, 1, '#A87A4A'); // lit top lip
+  R(ctx, x + 1, y + h - 2, w - 2, 1, '#5A3A22'); // shaded base
+  R(ctx, x + 4, y + 4, 1, h - 8, P.accent.golden); // inset trim frame
+  R(ctx, x + w - 5, y + 4, 1, h - 8, P.accent.golden);
+  R(ctx, x + 4, y + 4, w - 8, 1, P.accent.golden);
+  R(ctx, x + 4, y + h - 5, w - 8, 1, P.accent.golden);
+}
+
+// Left-wall poster + tiny high-score board for the Play zone (both flat, no glow).
+function drawPlayWall(ctx: CanvasRenderingContext2D): void {
+  // poster, mounted flush to the inner wall face (x36) so it reads as on the wall
+  R(ctx, 36, 150, 12, 20, P.wood.dark); // frame
+  R(ctx, 37, 151, 10, 18, P.surface.panel); // sheet
+  R(ctx, 37, 151, 10, 4, P.accent.indigo); // top band
+  R(ctx, 41, 158, 2, 2, P.accent.golden); // emblem
+  R(ctx, 48, 151, 1, 19, P.shadow); // 1px drop shadow (proud of the wall)
+  // tiny high-score board
+  R(ctx, 36, 176, 14, 12, P.wood.dark); // frame
+  R(ctx, 37, 177, 12, 10, '#0C1A1E'); // CRT face
+  R(ctx, 39, 179, 8, 1, P.accent.golden);
+  R(ctx, 39, 181, 6, 1, P.accent.golden);
+  R(ctx, 39, 183, 7, 1, P.accent.golden);
+  R(ctx, 38, 179, 1, 1, '#5FE0D0'); // teal rank pip
 }
 
 // Warm honey-oak floor: long horizontal boards (directional, not a checker),
@@ -237,9 +445,24 @@ function drawRug(ctx: CanvasRenderingContext2D, x: number, y: number, w: number,
 }
 
 function drawDoormat(ctx: CanvasRenderingContext2D, x: number, y: number): void {
-  R(ctx, x, y, 50, 16, P.wood.dark);
-  R(ctx, x + 2, y + 2, 46, 12, P.rug.deep);
-  for (let i = 0; i < 3; i++) R(ctx, x + 8 + i * 16, y + 5, 12, 1, P.accent.golden);
+  ctx.save();
+  ctx.globalAlpha = 0.28;
+  R(ctx, x + 1, y + 15, 48, 1, P.shadow); // faint contact shadow so it sits on the floor
+  ctx.restore();
+  R(ctx, x, y, 50, 16, P.wood.dark); // border
+  R(ctx, x, y, 50, 1, P.wood.mid); // lit top lip
+  R(ctx, x, y + 15, 50, 1, '#3A2616'); // shaded bottom lip
+  R(ctx, x + 2, y + 2, 46, 12, P.rug.deep); // woven field
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  for (let wx = x + 5; wx < x + 46; wx += 4) R(ctx, wx, y + 2, 1, 12, P.rug.base); // coir weave
+  ctx.restore();
+  // golden motif: a centred diamond flanked by two short bars (varied, not 3 identical bars)
+  R(ctx, x + 7, y + 8, 8, 1, P.accent.golden);
+  R(ctx, x + 35, y + 8, 8, 1, P.accent.golden);
+  R(ctx, x + 24, y + 7, 2, 1, P.accent.golden);
+  R(ctx, x + 23, y + 8, 4, 1, P.accent.golden);
+  R(ctx, x + 24, y + 9, 2, 1, P.accent.golden);
 }
 
 function drawWalls(ctx: CanvasRenderingContext2D): void {
@@ -775,18 +998,16 @@ function drawCareerWall(ctx: CanvasRenderingContext2D, x: number, y: number): vo
     ctx.strokeStyle = P.surface.line;
     ctx.lineWidth = 1;
     ctx.strokeRect(cx + 0.5, y + 6.5, 21, 13);
-    // a tiny intentional "framed picture" icon so empty slots read as reserved
-    // logo frames (a deliberate placeholder, not an under-construction scribble)
+    // company monogram tile (T / V / L for Takhlees / Vamonos / Lumofy) in its phase
+    // colour, so each slot reads as a real employer instead of an empty "add image" frame
     ctx.save();
-    ctx.globalAlpha = 0.3;
-    const ix = cx + 7,
-      iy = y + 9;
-    R(ctx, ix, iy, 8, 7, P.surface.line); // icon frame border
-    R(ctx, ix + 1, iy + 1, 6, 5, P.surface.sunken); // mat inside the frame
-    R(ctx, ix + 1, iy + 4, 6, 2, P.ink.faint); // little "mountain" picture base
-    R(ctx, ix + 3, iy + 2, 2, 2, P.ink.faint); // a peak
-    ctx.globalAlpha = 0.4;
-    R(ctx, ix + 5, iy + 2, 1, 1, P.accent.golden); // tiny sun glint, feels placed
+    ctx.fillStyle = i === 0 ? P.phase.sales.deep : i === 1 ? P.phase.hr.deep : P.phase.aidev.deep;
+    ctx.font = pix(11);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const mono = i === 0 ? 'T' : i === 1 ? 'V' : 'L';
+    ctx.fillText(mono, cx + 11, y + 13.5);
+    ctx.fillText(mono, cx + 11.6, y + 13.5); // faux-bold (Pixelify has no bold weight)
     ctx.restore();
   }
 }

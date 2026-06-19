@@ -3,7 +3,7 @@ import { useUiStore } from '../store/uiStore';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { blip } from '../engine/audio';
 
-const SPEED = 38; // chars per second (mirror DialogueBar)
+const SPEED = 60; // chars per second (mirror DialogueBar)
 
 type View = { kind: 'menu' } | { kind: 'answer'; qi: number };
 

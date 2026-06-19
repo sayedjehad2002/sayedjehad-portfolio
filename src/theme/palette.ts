@@ -14,8 +14,9 @@ export const palette = {
   door: { glass: '#6B4A2A', spill: '#FFD98A', frame: '#7A5230' },
   wood: { light: '#C4925A', mid: '#8A5E38', dark: '#5A3A22' },
   plant: { base: '#3F7A3A', hi: '#56A04A', dark: '#2F5E30' },
-  // autumn tree foliage (Moonlighter-style orange canopies)
-  autumn: { dark: '#B5562E', mid: '#D8743C', hi: '#E8A24A', pocket: '#8E3F1F', sun: '#F0C060', sun2: '#F5D070', red: '#C24A2A' },
+  // tree foliage: lush warm-green canopy with a golden sun-catch, harmonised with the
+  // green lawn/plants (key kept as `autumn` for stability; only the trees use it).
+  autumn: { dark: '#356A33', mid: '#5A9A40', hi: '#86C25A', pocket: '#2C5526', sun: '#F0C060', sun2: '#F5D070', red: '#3C7A36' },
 
   // --- interior room materials ---
   floor: {

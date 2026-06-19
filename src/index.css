@@ -12,7 +12,7 @@
   --ui-line: #e2d2ac;
   --ui-ink: #2e241a;
   --ui-ink-soft: #5a4a36;
-  --ui-ink-faint: #7a6748;
+  --ui-ink-faint: #6b5a3e; /* muted, but >=4.5:1 on the cream panel (dates / education / status) */
   --ui-teal: #1fa89c;
   --ui-teal-deep: #14756c; /* text-on-light accent (AA) */
   --ui-radius: 16px;
@@ -119,7 +119,51 @@ canvas {
 .caret { animation: blink 1s step-end infinite; }
 .pulse-ring { animation: pulseRing 2s ease-out infinite; }
 
-/* Respect reduced motion globally for CSS-driven overlays */
+/* ---- retro CRT arcade screen (scanlines + vignette + faint grid + sub-strobe flicker) ---- */
+.crt-screen {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 50% 38%, #1a2150 0%, #0d1238 45%, #070a22 100%);
+}
+.crt-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.22) 2px 3px);
+  mix-blend-mode: multiply;
+  opacity: var(--crt-scanline, 0.4);
+  pointer-events: none;
+  z-index: 40;
+}
+.crt-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(0, 0, 0, var(--crt-vignette, 0.5)) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 90px rgba(20, 16, 60, 0.45);
+  pointer-events: none;
+  z-index: 41;
+}
+.crt-grid {
+  background-image: repeating-linear-gradient(to right, rgba(95, 224, 208, 0.05) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(to bottom, rgba(95, 224, 208, 0.05) 0 1px, transparent 1px 16px);
+  -webkit-mask: radial-gradient(circle at 50% 45%, #000 55%, transparent 100%);
+  mask: radial-gradient(circle at 50% 45%, #000 55%, transparent 100%);
+}
+.crt-flicker {
+  animation: crtFlicker 5.5s ease-in-out infinite;
+}
+@keyframes crtFlicker {
+  0%, 100% { opacity: 1; }
+  48% { opacity: 0.97; }
+  50% { opacity: 0.93; }
+  52% { opacity: 0.98; }
+}
+
+/* Respect reduced motion for CSS-driven overlays. Kill keyframe animations (slides, pops,
+   blink, flicker, pulse) and any transform-driven transitions, but KEEP the gentle colour /
+   border / opacity / shadow transitions so hover and focus still read as interactive
+   feedback (a precise reset rather than flattening every transition). */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -127,7 +171,8 @@ canvas {
     animation-duration: 0.001ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+    transition-property: color, background-color, border-color, fill, stroke, opacity, box-shadow !important;
+    transition-duration: 0.15s !important;
     transition-delay: 0ms !important;
   }
 }

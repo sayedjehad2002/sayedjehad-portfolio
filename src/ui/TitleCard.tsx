@@ -22,7 +22,15 @@ export function TitleCard() {
           <br />
           <span className="text-teal">Developer&apos;s</span> World
         </h1>
-        <p className="mt-3 text-[15px] text-on-dark-soft">You are the recruiter. Walk the grounds, meet Sayed, then step into his studio to see the projects he has built.</p>
+        <p className="mt-3 text-[15px] text-on-dark-soft">You are the recruiter. Walk the grounds, meet Sayed, then step into his studio: his projects, resume, skills, and how to reach him.</p>
+
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+          {['Projects', 'Resume', 'Skills', 'About'].map((t) => (
+            <span key={t} className="rounded-full border border-teal/30 bg-teal/10 px-2.5 py-0.5 font-sans text-[11px] font-semibold text-on-dark-soft">
+              {t}
+            </span>
+          ))}
+        </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-5 text-[13px] text-on-dark-faint">
           <span className="flex items-center gap-2">
@@ -43,6 +51,7 @@ export function TitleCard() {
 
         <button
           onClick={enter}
+          autoFocus
           className="mt-8 rounded-xl bg-teal px-8 py-4 font-pixel text-[11px] tracking-wide text-[#08231f] shadow-[0_6px_0_#14756c] outline-none transition-transform duration-150 hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_#14756c] focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-[#15100a]"
         >
           ENTER THE WORLD ▸

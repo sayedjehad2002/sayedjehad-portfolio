@@ -65,6 +65,7 @@ interface HudState {
   started: boolean;
   dialogueOpen: boolean;
   doorOpen: boolean;
+  doorHint: { x: number; y: number } | null; // "talk to Sayed first" pill over the closed door
   refresh: { t: number; x: number; y: number } | null;
 }
 
@@ -80,6 +81,8 @@ export function drawHud(vp: Viewport, s: HudState): void {
 
   if (s.scene === 'plaza') {
     if (!s.dialogueOpen) {
+      // friendly "talk to Sayed first" hint over the still-locked door
+      if (s.doorHint) drawDoorHint(vp, s.doorHint.x, s.doorHint.y);
       // full nameplate + prompt for the active NPC; a faint distance-faded marker over
       // the other, so both are discoverable without cluttering the courtyard
       for (const it of s.interactables) {
@@ -132,6 +135,7 @@ function drawZoneGuides(vp: Viewport, alpha: number): void {
   ctx.save();
   ctx.globalAlpha = alpha;
   plate(vp, 'PROJECTS', 210, 48, { small: true, accent: 'amber', guide: true });
+  plate(vp, 'SKILLS', 401, 150, { small: true, accent: 'teal', guide: true });
   plate(vp, 'RESUME', 235, 206, { small: true, accent: 'teal', guide: true });
   plate(vp, 'EXIT', 236, 318, { small: true, accent: 'teal', guide: true });
   ctx.restore();
@@ -144,6 +148,7 @@ function drawZoneGuides(vp: Viewport, alpha: number): void {
 // where the active card takes over — far away the marker stays fully readable
 // (alpha floored high) so recruiters can spot every hotspot across the room.
 // ---------------------------------------------------------------------------
+const haloCache = new Map<string, CanvasGradient>(); // one halo gradient per accent colour (built at origin)
 function drawMarker(vp: Viewport, it: Interactable, player: Entity): void {
   const ctx = vp.ctx;
   const d = Math.hypot(player.x - it.x, player.y - it.y);
@@ -158,14 +163,21 @@ function drawMarker(vp: Viewport, it: Interactable, player: Entity): void {
   const color = ACCENT_SOLID[it.accent ?? 'teal'];
 
   // Soft accent halo behind the diamond so it pops off busy pixel art.
+  // PERF: cache one gradient per accent colour (built at the origin) and translate it to
+  // position, instead of createRadialGradient per marker per frame.
   ctx.save();
   ctx.globalAlpha = alpha * 0.5;
-  const halo = ctx.createRadialGradient(p.x, cy, 1, p.x, cy, 16);
-  halo.addColorStop(0, color);
-  halo.addColorStop(1, 'rgba(0,0,0,0)');
+  let halo = haloCache.get(color);
+  if (!halo) {
+    halo = ctx.createRadialGradient(0, 0, 1, 0, 0, 16);
+    halo.addColorStop(0, color);
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    haloCache.set(color, halo);
+  }
+  ctx.translate(p.x, cy);
   ctx.fillStyle = halo;
   ctx.beginPath();
-  ctx.arc(p.x, cy, 16, 0, Math.PI * 2);
+  ctx.arc(0, 0, 16, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
@@ -374,6 +386,39 @@ function drawRefreshed(vp: Viewport, r: { t: number; x: number; y: number }): vo
   ctx.fillStyle = '#FFFFFF';
   ctx.fillText(text, p.x, cy + 0.5);
   ctx.restore();
+}
+
+// A gentle "Talk to Sayed first" pill over the closed door, shown when the visitor
+// reaches it before meeting Sayed — so the gate reads as intentional, not a dead wall.
+function drawDoorHint(vp: Viewport, wx: number, wy: number): void {
+  const ctx = vp.ctx;
+  const p = w2s(vp, wx, wy);
+  const bob = vp.reduced ? 0 : Math.sin(vp.t * 3) * 1.5;
+  const cy = p.y + bob;
+  const text = 'Talk to Sayed first';
+  ctx.font = '700 12px "Nunito Sans", system-ui, sans-serif';
+  ctx.textBaseline = 'middle';
+  const tw = ctx.measureText(text).width;
+  const keyR = 5;
+  const padX = 12;
+  const gap = 8;
+  const w = padX * 2 + keyR * 2 + gap + tw;
+  const h = 26;
+  const x = p.x - w / 2;
+  const y = cy - h / 2;
+  uiPanel(ctx, x, y, w, h, h / 2, ACCENT.amber, 2);
+  // small amber lock glyph (body + shackle) as a friendly "locked for now" cue
+  const lx = x + padX + keyR;
+  ctx.fillStyle = ACCENT_SOLID.amber;
+  ctx.fillRect(lx - 3, cy - 1, 6, 5);
+  ctx.strokeStyle = ACCENT_SOLID.amber;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.arc(lx, cy - 1, 2.2, Math.PI, 0);
+  ctx.stroke();
+  ctx.fillStyle = UI.ink;
+  ctx.textAlign = 'left';
+  ctx.fillText(text, x + padX + keyR * 2 + gap, cy + 0.5);
 }
 
 // ---- simple plates (plaza nameplate + studio zone signs) ----

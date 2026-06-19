@@ -7,10 +7,14 @@ import { SoundToggle } from './ui/SoundToggle';
 import { HelpButton } from './ui/HelpDialog';
 import { Brand } from './ui/Brand';
 import { TouchControls } from './ui/TouchControls';
+import { AccessibleMenu } from './ui/AccessibleMenu';
 
 export default function App() {
   return (
     <>
+      {/* First tab stop: an sr-only skip-nav + the document's single <h1>, so AT and
+          keyboard-only users can reach the whole CV without operating the canvas. */}
+      <AccessibleMenu />
       <GameCanvas />
       {/* soft vignette over the world */}
       <div

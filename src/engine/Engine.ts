@@ -33,6 +33,11 @@ export class Engine {
   private loop: Loop;
   private detachKb: () => void = () => {};
   private onResize = (): void => this.resize();
+  // Pause the rAF loop while the tab is hidden so a backgrounded world is never painted.
+  private onVisibility = (): void => {
+    if (document.hidden) this.loop.stop();
+    else this.loop.start();
+  };
 
   dpr = 1;
   zoom = 3;
@@ -85,6 +90,9 @@ export class Engine {
   start(): void {
     this.detachKb = attachKeyboard();
     window.addEventListener('resize', this.onResize);
+    document.addEventListener('visibilitychange', this.onVisibility);
+    // Dev-only: expose the engine for local visual debugging (stripped from prod builds).
+    if (import.meta.env.DEV) (window as unknown as { __engine?: Engine }).__engine = this;
     this.resize();
     snapClamp(this.cam, this.player, this.world().w, this.world().h, this.vw / this.zoom, this.vh / this.zoom);
     this.loop.start();
@@ -94,6 +102,7 @@ export class Engine {
     this.loop.stop();
     this.detachKb();
     window.removeEventListener('resize', this.onResize);
+    document.removeEventListener('visibilitychange', this.onVisibility);
   }
 
   private world() {
@@ -194,7 +203,9 @@ export class Engine {
 
       if (this.scene === 'plaza' && this.door.state === 'open' && W.toStudioZone && hit(feet(this.player), W.toStudioZone)) {
         this.beginTransition('studio');
-      } else if (this.scene === 'studio' && W.toPlazaZone && hit(feet(this.player), W.toPlazaZone) && ax.y > 0) {
+      } else if (this.scene === 'studio' && W.toPlazaZone && hit(feet(this.player), W.toPlazaZone)) {
+        // Symmetric with the entrance: walking into the doorway leaves the studio (no
+        // hidden "hold Down" needed). arriveAt sits above the zone so it can't bounce.
         this.beginTransition('plaza');
       }
     } else {
@@ -231,6 +242,10 @@ export class Engine {
       case 'about':
         ui.openModal({ kind: 'about' });
         blip(620);
+        break;
+      case 'arcade':
+        ui.openModal({ kind: 'arcade' });
+        blip(720);
         break;
       case 'resume':
         ui.openModal({ kind: 'resume' });
@@ -276,6 +291,10 @@ export class Engine {
 
   private render(): void {
     const ui = useUiStore.getState();
+    // The arcade is a full-bleed opaque overlay running its own loop; skip the world+HUD
+    // repaint entirely while it covers the canvas. Cream modals/dialogue are translucent
+    // over the world, so those keep rendering.
+    if (ui.modal?.kind === 'arcade') return;
     const vp: Viewport = {
       ctx: this.ctx,
       cam: this.cam,
@@ -292,6 +311,12 @@ export class Engine {
     else drawStudio(vp, { player: this.player, drinking: this.drink.active, drinkT: this.drink.t });
 
     screenTransform(vp);
+    // Surface a "talk to Sayed first" hint when the visitor reaches the still-closed door
+    // before meeting Sayed, so the gate reads as intentional rather than an invisible wall.
+    const nearClosedDoor =
+      this.scene === 'plaza' &&
+      this.door.state === 'closed' &&
+      Math.hypot(this.player.x - 240, this.player.y - 150) < 54;
     drawHud(vp, {
       scene: this.scene,
       player: this.player,
@@ -300,6 +325,7 @@ export class Engine {
       started: ui.started,
       dialogueOpen: ui.dialogue !== null || ui.conversation !== null,
       doorOpen: this.door.state === 'open',
+      doorHint: nearClosedDoor ? { x: 240, y: 84 } : null,
       refresh: this.refresh.active ? { t: this.refresh.t, x: this.refresh.x, y: this.refresh.y } : null,
     });
 

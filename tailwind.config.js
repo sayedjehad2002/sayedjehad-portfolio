@@ -11,7 +11,7 @@ export default {
         sunken: '#F1E6CE',
         ink: '#2E241A',
         'ink-soft': '#5A4A36',
-        'ink-faint': '#7A6748',
+        'ink-faint': '#6B5A3E',
         teal: '#1FA89C',
         'teal-deep': '#14756C',
         indigo: '#7A5BA6',
