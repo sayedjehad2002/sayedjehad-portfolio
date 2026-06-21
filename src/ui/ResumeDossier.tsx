@@ -117,7 +117,7 @@ export function ResumeDossier() {
       </h2>
       <p className="mb-5 font-sans text-[13px] text-ink-soft">Three companies, six roles, one climb from sales into AI development.</p>
 
-      <ol className="relative ml-2 max-h-[58vh] overflow-y-auto border-l-2 border-line pl-6 pr-1">
+      <ol className="relative ml-2 border-l-2 border-line pl-6 pr-1">
         {GROUPS.map((g, gi) => {
           const multi = g.roles.length > 1;
           return (

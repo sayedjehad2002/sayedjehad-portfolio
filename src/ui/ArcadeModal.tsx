@@ -6,6 +6,7 @@ import { CrtFrame } from './arcade/CrtFrame';
 import { StartScreen } from './arcade/StartScreen';
 import { GameSelect } from './arcade/GameSelect';
 import { GAMES, getGame, allGamesBest, type GameId } from '../game/registry';
+import { isTouchDevice } from '../hooks/useIsTouch';
 
 type Screen = 'start' | 'select' | 'game';
 const CRT_KEY = 'sjbh.crtfx.v1';
@@ -25,7 +26,10 @@ function loadCrtOff(): boolean {
 export function ArcadeModal() {
   const close = useUiStore((s) => s.closeModal);
   const reduced = useReducedMotion();
-  const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+  // Use the same touch signal as the world TouchControls so the snake d-pad +
+  // tap controls appear exactly when the on-screen joystick does (matchMedia
+  // pointer:coarse alone can disagree and hide the d-pad on some touch devices).
+  const coarse = isTouchDevice();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);

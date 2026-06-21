@@ -9,7 +9,8 @@ export function HelpButton() {
       <button
         aria-label="Controls"
         onClick={() => setOpen(true)}
-        className="ui-chip ui-chip-btn ui-focus-dark fixed right-4 top-4 z-30"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))', right: 'calc(1rem + env(safe-area-inset-right))' }}
+        className="ui-chip ui-chip-btn ui-focus-dark fixed z-30"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="9.2" />

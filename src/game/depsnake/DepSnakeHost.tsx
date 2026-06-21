@@ -203,9 +203,12 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
           dpad.map((b) => (
             <button
               key={b.label}
-              onClick={() => turn(stateRef.current, b.dx, b.dy)}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                turn(stateRef.current, b.dx, b.dy);
+              }}
               aria-label={'Steer ' + (b.dy < 0 ? 'up' : b.dy > 0 ? 'down' : b.dx < 0 ? 'left' : 'right')}
-              className={'ui-focus-dark absolute grid h-11 w-11 place-items-center rounded-lg bg-black/45 font-pixel text-[14px] text-[#cdd8e4] outline-none backdrop-blur-sm ' + b.pos}
+              className={'ui-focus-dark absolute grid h-11 w-11 touch-none place-items-center rounded-lg bg-black/45 font-pixel text-[14px] text-[#cdd8e4] outline-none backdrop-blur-sm ' + b.pos}
             >
               {b.label}
             </button>
@@ -237,9 +240,19 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
                 ))}
               </div>
               <div className="mt-4 flex items-center justify-center gap-3 font-sans text-[11px] text-[#6c7d8f]">
-                <span>Arrows / WASD to steer</span>
-                <span aria-hidden="true">/</span>
-                <span>Space pauses</span>
+                {coarse ? (
+                  <>
+                    <span>Swipe or d-pad to steer</span>
+                    <span aria-hidden="true">/</span>
+                    <span>tap pauses</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Arrows / WASD to steer</span>
+                    <span aria-hidden="true">/</span>
+                    <span>Space pauses</span>
+                  </>
+                )}
               </div>
               <button onClick={onExit} className="ui-focus-dark mt-3 min-h-[44px] rounded-lg px-4 font-sans text-[12px] font-semibold text-[#8aa0b2] outline-none transition-colors hover:text-[#dfeaf2]">
                 <kbd className="mr-1 rounded border border-[#2a3a48] bg-[#0f1226] px-1.5 py-0.5 font-pixel text-[8px]">Esc</kbd>

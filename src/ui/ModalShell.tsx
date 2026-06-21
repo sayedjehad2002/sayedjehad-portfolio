@@ -43,7 +43,15 @@ export function ModalShell({ onClose, labelledBy, children, width = 'max-w-md' }
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-40 grid place-items-center p-4">
+    <div
+      className="fixed inset-0 z-40 grid place-items-center"
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top))',
+        paddingRight: 'max(1rem, env(safe-area-inset-right))',
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+      }}
+    >
       <div className="anim-fade absolute inset-0 bg-[rgba(20,16,10,0.5)] backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <div
         ref={ref}
@@ -52,18 +60,22 @@ export function ModalShell({ onClose, labelledBy, children, width = 'max-w-md' }
         aria-modal="true"
         aria-labelledby={labelledBy}
         style={{ transformOrigin: 'center', willChange: 'transform, opacity' }}
-        className={`anim-pop relative z-10 w-full ${width} rounded-panel border border-line bg-panel p-6 shadow-pop ring-1 ring-black/5 outline-none`}
+        className={`anim-pop relative z-10 flex max-h-full w-full ${width} flex-col overflow-hidden rounded-panel border border-line bg-panel shadow-pop ring-1 ring-black/5 outline-none`}
       >
         <button
           onClick={onClose}
           aria-label="Close"
-          className="ui-focus-panel absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-[10px] border border-line bg-sunken text-ink-soft outline-none transition-colors hover:border-teal hover:text-ink"
+          className="ui-focus-panel absolute right-3 top-3 z-20 grid h-11 w-11 place-items-center rounded-[10px] border border-line bg-sunken text-ink-soft outline-none transition-colors hover:border-teal hover:text-ink"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
         </button>
-        {children}
+        {/* The box is height-capped to the padded viewport (max-h-full); content
+            scrolls inside it so headings + bottom CTAs stay reachable on short
+            (landscape) phones. The close button is pinned to the box, not the
+            scroller, so it never scrolls away. */}
+        <div className="overflow-y-auto overscroll-contain p-6">{children}</div>
       </div>
     </div>
   );

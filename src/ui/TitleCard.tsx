@@ -1,9 +1,11 @@
 import { useUiStore } from '../store/uiStore';
 import { resumeAudio } from '../engine/audio';
+import { useIsTouch } from '../hooks/useIsTouch';
 
 export function TitleCard() {
   const started = useUiStore((s) => s.started);
   const start = useUiStore((s) => s.start);
+  const touch = useIsTouch();
   if (started) return null;
 
   const enter = () => {
@@ -33,20 +35,37 @@ export function TitleCard() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-5 text-[13px] text-on-dark-faint">
-          <span className="flex items-center gap-2">
-            {['W', 'A', 'S', 'D'].map((k) => (
-              <kbd key={k} className="grid h-7 min-w-7 place-items-center rounded-md border border-[#5a452e] border-b-[3px] bg-[#3a2c1c] px-1 font-pixel text-[10px] text-panel">
-                {k}
-              </kbd>
-            ))}
-            move
-          </span>
-          <span className="flex items-center gap-2">
-            <kbd className="grid h-7 min-w-7 place-items-center rounded-md border border-[#5a452e] border-b-[3px] bg-[#3a2c1c] px-2 font-pixel text-[10px] text-panel">
-              E
-            </kbd>
-            interact
-          </span>
+          {touch ? (
+            <>
+              <span className="flex items-center gap-2">
+                <span className="relative grid h-7 w-7 place-items-center rounded-full border border-white/20 bg-black/30" aria-hidden="true">
+                  <span className="h-3 w-3 rounded-full bg-teal/80" />
+                </span>
+                drag to move
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-teal font-pixel text-[10px] text-[#08231f]" aria-hidden="true">E</span>
+                tap to interact
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="flex items-center gap-2">
+                {['W', 'A', 'S', 'D'].map((k) => (
+                  <kbd key={k} className="grid h-7 min-w-7 place-items-center rounded-md border border-[#5a452e] border-b-[3px] bg-[#3a2c1c] px-1 font-pixel text-[10px] text-panel">
+                    {k}
+                  </kbd>
+                ))}
+                move
+              </span>
+              <span className="flex items-center gap-2">
+                <kbd className="grid h-7 min-w-7 place-items-center rounded-md border border-[#5a452e] border-b-[3px] bg-[#3a2c1c] px-2 font-pixel text-[10px] text-panel">
+                  E
+                </kbd>
+                interact
+              </span>
+            </>
+          )}
         </div>
 
         <button
@@ -56,7 +75,9 @@ export function TitleCard() {
         >
           ENTER THE WORLD ▸
         </button>
-        <p className="mt-5 text-[11.5px] text-on-dark-faint">Best on desktop with a keyboard · touch controls appear on mobile</p>
+        <p className="mt-5 text-[11.5px] text-on-dark-faint">
+          {touch ? 'Drag the joystick to walk · tap E to interact' : 'Best on desktop with a keyboard · touch controls appear on mobile'}
+        </p>
       </div>
     </div>
   );

@@ -116,7 +116,12 @@ export class Engine {
     this.canvas.width = Math.floor(this.vw * this.dpr);
     this.canvas.height = Math.floor(this.vh * this.dpr);
     const { w, h } = this.world();
-    const z = Math.max(3, Math.ceil(Math.max(this.vw / w, this.vh / h)));
+    // Narrow portrait phones are very tall vs the world, so a floor of 3 crops the
+    // scene to a thin slice. Drop the floor to 2 on small viewports so more of the
+    // world is visible (still an integer scale, so pixel art stays crisp). Desktop
+    // (>=480 CSS px wide) keeps the original floor of 3, so the camera feel is unchanged.
+    const floor = this.vw < 480 ? 2 : 3;
+    const z = Math.max(floor, Math.ceil(Math.max(this.vw / w, this.vh / h)));
     this.zoom = Math.min(z, 6);
     this.ctx.imageSmoothingEnabled = false;
   }

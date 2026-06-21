@@ -202,7 +202,10 @@ export function ConversationPanel() {
   return (
     <>
       <div className="anim-fade fixed inset-0 z-10 bg-[rgba(20,16,10,0.4)]" aria-hidden="true" onClick={closeConversation} />
-      <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-4">
+      <div
+        className="fixed inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-4"
+        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+      >
         <div
           ref={panelRef}
           role="dialog"
