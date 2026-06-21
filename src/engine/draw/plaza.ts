@@ -1,5 +1,5 @@
 import { palette as P } from '../../theme/palette';
-import { R, roundRectPath, softShadow, type Viewport } from '../render';
+import { R, roundRectPath, softShadow, staticLayer, type StaticLayerCtx, type Viewport } from '../render';
 import type { Door } from '../systems/door';
 import type { Entity } from '../types';
 import { drawSayed, drawRecruiter, drawLostOne } from './sprites';
@@ -124,12 +124,9 @@ export function drawPlaza(vp: Viewport, world: { player: Entity; npc: Entity; lo
   const y1 = vp.cam.y + vp.vh / vp.zoom + 40;
   R(ctx, x0, y0, x1 - x0, y1 - y0, P.plaza.stone2);
 
-  drawPaving(ctx);
-  drawWelcomePath(ctx);
-  drawLawns(ctx);
+  staticLayer(vp, 'plaza:bg', 480, 432, buildPlazaBg); // baked: paving + welcome path + lawns
   drawGrass(vp, world.player);
-  drawRoof(ctx);
-  drawFacade(ctx);
+  staticLayer(vp, 'plaza:mid', 480, 432, buildPlazaMid); // baked: roof + facade
   drawCottageWindow(vp, 64, 78);
   drawCottageWindow(vp, 150, 78);
   drawCottageWindow(vp, 300, 78);
@@ -164,6 +161,20 @@ export function drawPlaza(vp: Viewport, world: { player: Entity; npc: Entity; lo
     drawLeaves(vp);
     drawMotes(vp);
   }
+}
+
+// Static plaza dressing baked once into offscreen layers (see staticLayer). Each is
+// blitted in place in drawPlaza, so z-order is unchanged. The heavy paving + lawn +
+// facade loops become two drawImage calls; trees/flowers/bench stay per-frame so their
+// z-order with grass/lanterns is preserved automatically.
+function buildPlazaBg(s: StaticLayerCtx): void {
+  drawPaving(s.ctx);
+  drawWelcomePath(s.ctx);
+  drawLawns(s.ctx);
+}
+function buildPlazaMid(s: StaticLayerCtx): void {
+  drawRoof(s.ctx);
+  drawFacade(s.ctx);
 }
 
 function drawPaving(ctx: CanvasRenderingContext2D): void {

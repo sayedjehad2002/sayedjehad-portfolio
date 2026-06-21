@@ -158,12 +158,14 @@ function drawSayedHead(vp: Viewport, ctx: CanvasRenderingContext2D, x: number, t
     ctx.fillStyle = '#2A2620';
     ctx.fillRect(x - 3, top + 5, 2, 2);
     ctx.fillRect(x + 1, top + 5, 2, 2);
-    ctx.fillStyle = '#4A4038';
-    ctx.fillRect(x - 3, top + 5, 1, 1); // catch-light in the near eye
-    ctx.fillRect(x + 1, top + 5, 1, 1);
+    ctx.fillStyle = '#FBF3E0';
+    ctx.fillRect(x - 3, top + 5, 1, 1); // bright catch-light glints so the eyes read as alive
+    ctx.fillRect(x + 2, top + 5, 1, 1);
   }
   ctx.fillStyle = P.skin.shadow;
   ctx.fillRect(x - 1, top + 7, 2, 1); // soft nose/brow shadow
+  ctx.fillStyle = P.skin.hi;
+  ctx.fillRect(x, top + 6, 1, 1); // lit nose bridge → a touch more facial structure
 
   // groomed mustache + goatee with friendly up-curled tips
   ctx.fillStyle = HAIR;
@@ -354,8 +356,8 @@ function drawRecruiterHead(vp: Viewport, ctx: CanvasRenderingContext2D, x: numbe
   } else {
     R(ctx, x - 3, top + 4, 2, 2, '#3a2f25');
     R(ctx, x + 1, top + 4, 2, 2, '#3a2f25');
-    R(ctx, x - 3, top + 4, 1, 1, '#5A4E40'); // eye catch-light
-    R(ctx, x + 1, top + 4, 1, 1, '#5A4E40');
+    R(ctx, x - 3, top + 4, 1, 1, '#FBF3E0'); // bright eye catch-light
+    R(ctx, x + 2, top + 4, 1, 1, '#FBF3E0');
   }
   R(ctx, x - 1, top + 6, 1, 1, P.skin.shadow); // nose
   // a warm friendly smile (corners lifted) + a hint of cheek colour
@@ -495,7 +497,7 @@ export function drawLostOne(vp: Viewport, e: Entity): void {
     R(ctx, x - 4, y - 22, 2, 1, P.skin.shadow); // eye closed on the blink
   } else {
     R(ctx, x - 4, y - 23, 2, 2, '#2A2620'); // the one visible eye
-    R(ctx, x - 4, y - 23, 1, 1, '#4A4038'); // catch-light softening
+    R(ctx, x - 4, y - 23, 1, 1, '#FBF3E0'); // bright catch-light → a kind, alive eye
   }
   R(ctx, x - 6, y - 19, 2, 1, P.skin.shadow); // slight smile line near the front
   R(ctx, x - 5, y - 21, 1, 1, '#E2926E'); // a warm friendly cheek

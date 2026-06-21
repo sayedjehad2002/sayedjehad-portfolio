@@ -64,6 +64,11 @@ function GuidePortrait() {
       <rect x="12" y="9" width="2" height="1" fill={beard} />
       <rect x="8" y="10" width="2" height="2" fill="#16121A" />
       <rect x="12" y="10" width="2" height="2" fill="#16121A" />
+      {/* bright catch-light + a soft lower-lid highlight so the eyes read warm and alive */}
+      <rect x="8" y="10" width="1" height="1" fill="#F4ECDA" />
+      <rect x="12" y="10" width="1" height="1" fill="#F4ECDA" />
+      <rect x="8" y="12" width="2" height="1" fill="#E8B68C" />
+      <rect x="12" y="12" width="2" height="1" fill="#E8B68C" />
       {/* nose */}
       <rect x="10" y="11" width="1" height="2" fill={skinSh} />
       {/* friendly mouth, mustache, short beard */}

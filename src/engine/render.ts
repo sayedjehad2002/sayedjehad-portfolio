@@ -61,3 +61,41 @@ export function softShadow(ctx: CanvasRenderingContext2D, x: number, y: number, 
   ctx.ellipse(x, y, rx, rx * 0.42, 0, 0, Math.PI * 2);
   ctx.fill();
 }
+
+// ---------------------------------------------------------------------------
+// Offscreen static-texture cache. The heavy world-texture layers (paving, lawn,
+// floor, walls, facade) are pure deterministic geometry — identical every frame.
+// We bake each CONTIGUOUS run of static draws into a world-resolution offscreen
+// canvas ONCE and blit it IN PLACE under the world transform (one drawImage
+// instead of hundreds of rects). Because every cached run is blitted at its
+// original position in the draw order, z-order is unchanged → pixel-identical.
+// Built lazily; rebuilt only if reduced-motion flips. World-resolution means it
+// is camera/zoom/dpr-independent, so it never needs rebuilding on resize.
+// ---------------------------------------------------------------------------
+export interface StaticLayerCtx {
+  ctx: CanvasRenderingContext2D;
+  reduced: boolean;
+  t: number; // frozen at 0 — static layers never animate
+}
+
+const staticCache = new Map<string, { canvas: HTMLCanvasElement; reduced: boolean }>();
+
+export function staticLayer(vp: Viewport, key: string, w: number, h: number, build: (s: StaticLayerCtx) => void): void {
+  let entry = staticCache.get(key);
+  if (!entry || entry.reduced !== vp.reduced) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const octx = canvas.getContext('2d');
+    if (!octx) return;
+    octx.imageSmoothingEnabled = false;
+    build({ ctx: octx, reduced: vp.reduced, t: 0 });
+    entry = { canvas, reduced: vp.reduced };
+    staticCache.set(key, entry);
+  }
+  vp.ctx.drawImage(entry.canvas, 0, 0);
+}
+
+export function invalidateStaticLayers(): void {
+  staticCache.clear();
+}

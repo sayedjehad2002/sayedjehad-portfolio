@@ -23,11 +23,11 @@ export const PROJECTS: Project[] = [
   {
     id: 'pulse',
     name: 'Lumofy Pulse',
-    tag: 'Live · Internal',
+    tag: 'Internal · HR',
     accent: 'aidev',
     desc: "A company-wide HR attendance and leave management system, now Lumofy's primary internal tool.",
     stack: ['React', 'Supabase', 'Netlify'],
-    url: 'https://lumofypulse.netlify.app',
+    url: null, // internal HR system — no public link
   },
   {
     id: 'dispatch',

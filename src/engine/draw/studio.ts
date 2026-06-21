@@ -1,5 +1,5 @@
 import { palette as P } from '../../theme/palette';
-import { R, softShadow, pix, type Viewport } from '../render';
+import { R, softShadow, pix, staticLayer, type StaticLayerCtx, type Viewport } from '../render';
 import type { Entity } from '../types';
 import { drawRecruiter } from './sprites';
 
@@ -98,13 +98,9 @@ export function drawStudio(vp: Viewport, world: { player: Entity; drinking?: boo
   const y1 = vp.cam.y + vp.vh / vp.zoom + 40;
   R(ctx, x0, y0, x1 - x0, y1 - y0, '#1a130d');
 
-  drawFloor(ctx);
+  staticLayer(vp, 'studio:floor', 470, 362, buildStudioFloor); // baked: floor planks
   drawWindowSpill(vp);
-  drawRug(ctx, 150, 196, 170, 100);
-  drawPlayRug(ctx, 34, 270, 100, 32); // warm rug grounding the left "Break & Play" cluster (clear of the central desk rug at x150)
-  drawDoormat(ctx, 211, 300);
-  drawWalls(ctx);
-  drawWindow(ctx, 28, 120);
+  staticLayer(vp, 'studio:base', 470, 362, buildStudioBase); // baked: rugs + doormat + walls + window
 
   // warm light pools (additive)
   const t = vp.t;
@@ -119,11 +115,11 @@ export function drawStudio(vp: Viewport, world: { player: Entity; drinking?: boo
   drawPlayWall(ctx); // left-wall poster + tiny high-score board marking the Play zone
 
   // zone props
-  drawCounter(ctx, 60, 96, 360);
+  staticLayer(vp, 'studio:counter', 470, 362, buildStudioCounter); // baked: gallery counter
   // SECONDARY-tier interactable glow behind the career wall (unified vp.t*1.5),
   // drawn first so the corkboard layers on top; marks it as interactable.
   pool(vp, 235, 173, vp.reduced ? 30 : 30 + 2 * Math.sin(t * 1.5), P.accent.amber, 0.2 + (vp.reduced ? 0 : 0.06 * Math.sin(t * 1.5)));
-  drawCareerWall(ctx, 196, 150);
+  staticLayer(vp, 'studio:careerwall', 470, 362, buildStudioCareerWall); // baked: corkboard
   drawDeskAndBook(vp, 208, 212);
   drawTechShelf(vp, 386, 178);
   drawDeskLamp(vp, 196, 206);
@@ -148,6 +144,26 @@ export function drawStudio(vp: Viewport, world: { player: Entity; drinking?: boo
   drawVignette(vp);
 
   if (!vp.reduced) drawMotes(vp);
+}
+
+// Static studio dressing baked once into offscreen layers (see staticLayer), blitted
+// in place so z-order is unchanged. Collapses the heavy floor / walls / counter /
+// corkboard loops into single drawImage blits; plants/pots/cozy props stay per-frame.
+function buildStudioFloor(s: StaticLayerCtx): void {
+  drawFloor(s.ctx);
+}
+function buildStudioBase(s: StaticLayerCtx): void {
+  drawRug(s.ctx, 150, 196, 170, 100);
+  drawPlayRug(s.ctx, 34, 270, 100, 32);
+  drawDoormat(s.ctx, 211, 300);
+  drawWalls(s.ctx);
+  drawWindow(s.ctx, 28, 120);
+}
+function buildStudioCounter(s: StaticLayerCtx): void {
+  drawCounter(s.ctx, 60, 96, 360);
+}
+function buildStudioCareerWall(s: StaticLayerCtx): void {
+  drawCareerWall(s.ctx, 196, 150);
 }
 
 // Fills an arbitrary quad (used for the cabinet's angled 3/4 side + top faces).
@@ -423,6 +439,11 @@ function drawRug(ctx: CanvasRenderingContext2D, x: number, y: number, w: number,
   ctx.restore();
   R(ctx, x + 12, y + 12, w - 24, h - 24, '#24454d'); // recessed center panel
   R(ctx, x + 12, y + 12, w - 24, 1, '#2E545C');
+  // faint woven warp threads across the center panel — a subtle weave read (baked, free)
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  for (let sx = x + 16; sx < x + w - 14; sx += 3) R(ctx, sx, y + 14, 1, h - 28, '#3CA199');
+  ctx.restore();
   // woven dash pattern along the field band (deterministic, calm)
   ctx.save();
   ctx.globalAlpha = 0.4;
