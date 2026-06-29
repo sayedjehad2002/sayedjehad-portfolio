@@ -33,7 +33,7 @@ export function TitleCard() {
             the duration + delay (index.css) so everything just appears at once. */}
         <div className="w-full max-w-lg text-center">
           <span
-            className="anim-slideup inline-block rounded-full border border-teal/40 bg-teal/10 px-3 py-1 font-pixel text-[9px] tracking-wide text-golden"
+            className="anim-slideup inline-block rounded-full border border-teal/40 bg-teal/10 px-3 py-1 font-pixel text-eyebrow tracking-wide text-golden"
             style={{ animationDelay: '0ms' }}
           >
             INTERACTIVE PORTFOLIO
@@ -47,7 +47,7 @@ export function TitleCard() {
             <span className="title-sheen text-teal">Developer&apos;s</span> World
           </h1>
           <p
-            className="anim-slideup mt-3 text-[15.5px] leading-relaxed text-[#F2E9D6] [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]"
+            className="anim-slideup mt-3 text-ui leading-relaxed text-[#F2E9D6] [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]"
             style={{ animationDelay: '140ms' }}
           >
             Step into Sayed Jehad&apos;s world. Wander the grounds, meet Sayed, then explore his studio: his projects, resume, skills, and how to connect.
@@ -55,13 +55,13 @@ export function TitleCard() {
 
           <div className="anim-slideup mt-3 flex flex-wrap items-center justify-center gap-1.5" style={{ animationDelay: '210ms' }}>
             {['Projects', 'Resume', 'Skills', 'About'].map((t) => (
-              <span key={t} className="rounded-full border border-teal/30 bg-teal/10 px-2.5 py-0.5 font-sans text-[11px] font-semibold text-on-dark-soft">
+              <span key={t} className="rounded-full border border-teal/30 bg-teal/10 px-2.5 py-0.5 font-sans text-caption font-semibold text-on-dark-soft">
                 {t}
               </span>
             ))}
           </div>
 
-          <div className="anim-slideup mt-6 flex flex-wrap items-center justify-center gap-5 text-[13px] text-on-dark-faint" style={{ animationDelay: '280ms' }}>
+          <div className="anim-slideup mt-6 flex flex-wrap items-center justify-center gap-5 text-small text-on-dark-faint" style={{ animationDelay: '280ms' }}>
             {touch ? (
               <>
                 <span className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export function TitleCard() {
                   drag to move
                 </span>
                 <span className="flex items-center gap-2">
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-teal font-pixel text-[10px] text-[#08231f]" aria-hidden="true">E</span>
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-teal font-pixel text-micro text-[#08231f]" aria-hidden="true">E</span>
                   tap to interact
                 </span>
               </>
@@ -79,14 +79,14 @@ export function TitleCard() {
               <>
                 <span className="flex items-center gap-2">
                   {['W', 'A', 'S', 'D'].map((k) => (
-                    <kbd key={k} className="grid h-7 min-w-7 place-items-center rounded-md border border-[#5a452e] border-b-[3px] bg-[#3a2c1c] px-1 font-pixel text-[10px] text-panel">
+                    <kbd key={k} className="grid h-7 min-w-7 place-items-center rounded-md border border-[#5a452e] border-b-[3px] bg-[#3a2c1c] px-1 font-pixel text-micro text-panel">
                       {k}
                     </kbd>
                   ))}
                   move
                 </span>
                 <span className="flex items-center gap-2">
-                  <kbd className="grid h-7 min-w-7 place-items-center rounded-md border border-[#5a452e] border-b-[3px] bg-[#3a2c1c] px-2 font-pixel text-[10px] text-panel">
+                  <kbd className="grid h-7 min-w-7 place-items-center rounded-md border border-[#5a452e] border-b-[3px] bg-[#3a2c1c] px-2 font-pixel text-micro text-panel">
                     E
                   </kbd>
                   interact
@@ -99,11 +99,11 @@ export function TitleCard() {
             <button
               onClick={enter}
               autoFocus
-              className="mt-8 rounded-xl bg-teal px-8 py-4 font-pixel text-[11px] tracking-wide text-[#08231f] shadow-[0_6px_0_#14756c] outline-none transition-transform duration-150 hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_#14756c] focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-[#15100a]"
+              className="mt-8 rounded-xl bg-teal px-8 py-4 font-pixel text-caption tracking-wide text-[#08231f] shadow-[0_6px_0_#14756c] outline-none transition-transform duration-150 hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_#14756c] focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-[#15100a]"
             >
               ENTER THE WORLD ▸
             </button>
-            <p className="mt-5 text-[12px] text-on-dark-soft [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
+            <p className="mt-5 text-label text-on-dark-soft [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
               {touch ? 'Drag the joystick to walk · tap E to interact' : 'Best on desktop with a keyboard · touch controls appear on mobile'}
             </p>
           </div>

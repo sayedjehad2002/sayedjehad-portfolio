@@ -29,22 +29,22 @@ export class ErrorBoundary extends Component<Props, State> {
         style={{ backgroundColor: '#15100a', backgroundImage: 'radial-gradient(135% 100% at 50% 30%, #2e2218, #15100a 72%)' }}
       >
         <div className="max-w-md">
-          <h1 className="font-pixel text-[22px] leading-tight text-panel [text-shadow:0_3px_0_#1c130a]">Sayed Jehad</h1>
-          <p className="mt-3 font-sans text-[15px] leading-relaxed text-on-dark-soft">
+          <h1 className="font-pixel text-title leading-tight text-panel [text-shadow:0_3px_0_#1c130a]">Sayed Jehad</h1>
+          <p className="mt-3 font-sans text-ui leading-relaxed text-on-dark-soft">
             The interactive world hit a snag on this device. No problem, you can still reach me and grab my CV:
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <a href="source/sayed-jehad-cv.pdf" download className="rounded-xl bg-teal px-5 py-3 font-sans text-[14px] font-semibold text-[#08231f] shadow-[0_5px_0_#14756c]">
+            <a href="source/sayed-jehad-cv.pdf" download className="rounded-xl bg-teal px-5 py-3 font-sans text-body font-semibold text-[#08231f] shadow-[0_5px_0_#14756c] outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-[#15100a]">
               Download CV
             </a>
-            <a href="mailto:lumofybh@gmail.com" className="rounded-xl border border-teal/40 bg-teal/10 px-5 py-3 font-sans text-[14px] font-semibold text-on-dark-soft">
+            <a href="mailto:lumofybh@gmail.com" className="rounded-xl border border-teal/40 bg-teal/10 px-5 py-3 font-sans text-body font-semibold text-on-dark-soft outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-[#15100a]">
               Email
             </a>
-            <a href="https://linkedin.com/in/sayed-jehad-saeed-1729b3150" target="_blank" rel="noreferrer" className="rounded-xl border border-teal/40 bg-teal/10 px-5 py-3 font-sans text-[14px] font-semibold text-on-dark-soft">
+            <a href="https://linkedin.com/in/sayed-jehad-saeed-1729b3150" target="_blank" rel="noreferrer" className="rounded-xl border border-teal/40 bg-teal/10 px-5 py-3 font-sans text-body font-semibold text-on-dark-soft outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-[#15100a]">
               LinkedIn
             </a>
           </div>
-          <button onClick={() => window.location.reload()} className="mt-5 font-sans text-[13px] text-on-dark-faint underline underline-offset-2">
+          <button onClick={() => window.location.reload()} className="mt-5 rounded font-sans text-small text-on-dark-faint underline underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-[#15100a]">
             Reload the world
           </button>
         </div>

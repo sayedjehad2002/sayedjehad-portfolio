@@ -23,6 +23,7 @@ export interface EnvironmentConfig {
   moonEnabled: boolean;
   windEnabled: boolean;
   birdsEnabled: boolean;
+  oceanEnabled: boolean; // animated sea behind the cottage (dolphins, fish, shimmer, gulls)
   reflectionsEnabled: boolean;
   ambientParticlesEnabled: boolean;
   ambientAudioEnabled: boolean;
@@ -42,6 +43,7 @@ export const DEFAULT_ENV_CONFIG: EnvironmentConfig = {
   moonEnabled: true,
   windEnabled: true,
   birdsEnabled: true,
+  oceanEnabled: true,
   reflectionsEnabled: true,
   ambientParticlesEnabled: true,
   ambientAudioEnabled: true,

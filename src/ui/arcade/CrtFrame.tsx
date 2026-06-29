@@ -37,12 +37,12 @@ export function CrtFrame({ reduced, crtOff, flicker, onToggleCrt, children }: Cr
         </div>
 
         <div className="mt-[6px] flex items-center justify-between px-1">
-          <span className="font-pixel text-[7px] uppercase tracking-[0.2em] text-[#5a5e68]" aria-hidden="true">
+          <span className="font-pixel text-pico uppercase tracking-[0.2em] text-[#5a5e68]" aria-hidden="true">
             SAYED-OS · MODEL SJ-88
           </span>
           <button
             onClick={onToggleCrt}
-            className="ui-focus-dark inline-flex min-h-[44px] items-center rounded px-3 font-pixel text-[8px] uppercase tracking-wider text-[#7c8aa0] outline-none transition-colors hover:text-[#cdd8e4]"
+            className="ui-focus-dark inline-flex min-h-[44px] items-center rounded px-3 font-pixel text-nano uppercase tracking-wider text-[#7c8aa0] outline-none transition-colors hover:text-[#cdd8e4]"
           >
             CRT FX {crtOff ? 'OFF' : 'ON'}
           </button>

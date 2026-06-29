@@ -19,6 +19,7 @@ export interface EnvState {
   sunEnabled: boolean;
   moonEnabled: boolean;
   birdsEnabled: boolean;
+  oceanEnabled: boolean;
   particlesEnabled: boolean;
   reflectionsEnabled: boolean;
   shadowQuality: 'off' | 'low' | 'high';
@@ -75,6 +76,7 @@ const ENV: EnvState = {
   sunEnabled: true,
   moonEnabled: true,
   birdsEnabled: true,
+  oceanEnabled: true,
   particlesEnabled: true,
   reflectionsEnabled: true,
   shadowQuality: 'high',
@@ -188,6 +190,7 @@ export function computeEnv(cfg: EnvironmentConfig, debug: number | null, perfNow
   ENV.sunEnabled = cfg.sunEnabled;
   ENV.moonEnabled = cfg.moonEnabled;
   ENV.birdsEnabled = cfg.birdsEnabled;
+  ENV.oceanEnabled = cfg.oceanEnabled;
   ENV.particlesEnabled = cfg.ambientParticlesEnabled;
   ENV.reflectionsEnabled = cfg.reflectionsEnabled;
   ENV.shadowQuality = cfg.shadowQuality;

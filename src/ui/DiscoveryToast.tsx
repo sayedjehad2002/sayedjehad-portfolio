@@ -14,6 +14,7 @@ export function DiscoveryToast() {
     const id = window.setTimeout(() => setShow(false), 3200);
     return () => window.clearTimeout(id);
     // re-run on each new discovery (nonce changes even for the same count)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- nonce is the intended trigger
   }, [last?.nonce]);
 
   if (!last || !show) return null;
@@ -29,8 +30,8 @@ export function DiscoveryToast() {
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-teal">
           <path d="M5 13l4 4L19 7" />
         </svg>
-        <span className="font-sans text-[12.5px] font-semibold leading-none text-white">Discovered {last.label}</span>
-        <span className="font-sans text-[11px] font-semibold leading-none text-on-dark-faint tabular-nums">
+        <span className="font-sans text-label font-semibold leading-none text-white">Discovered {last.label}</span>
+        <span className="font-sans text-caption font-semibold leading-none text-on-dark-faint tabular-nums">
           {last.count}/{STATIONS.length}
         </span>
       </div>

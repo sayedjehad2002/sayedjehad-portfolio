@@ -1,0 +1,35 @@
+{
+  "name": "Sayed Jehad - Developer's World",
+  "short_name": "Sayed Jehad",
+  "description": "A cozy interactive pixel-art portfolio you walk through to meet Sayed Jehad, explore his projects, resume and skills.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#15100a",
+  "theme_color": "#15100a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

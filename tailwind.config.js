@@ -49,6 +49,30 @@ export default {
         pop: '0 24px 60px rgba(0,0,0,0.5)',
         chip: '0 4px 14px rgba(10,8,5,0.35)',
       },
+      // One discrete type scale (px-exact, no .5px hacks) so every font size is
+      // named and tuned in one place. Semantic keys avoid colliding with Tailwind's
+      // default size names (xs/sm/lg...). No line-height is set, so existing
+      // leading-* utilities keep working unchanged.
+      fontSize: {
+        pico: '7px',
+        nano: '8px',
+        eyebrow: '9px',
+        micro: '10px',
+        caption: '11px',
+        label: '12px',
+        small: '13px',
+        body: '14px',
+        ui: '15px',
+        lead: '16px',
+        name: '17px',
+        title: '22px',
+        display: '24px',
+        score: '44px',
+      },
+      // One shared easing so motion feels consistent across overlays.
+      transitionTimingFunction: {
+        smooth: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+      },
     },
   },
   plugins: [],

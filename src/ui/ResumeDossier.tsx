@@ -1,10 +1,10 @@
 import { EDUCATION, LINKEDIN, PHASES } from '../data/roles';
 import { CONTACT } from '../data/about';
 import type { PhaseKey } from '../theme/palette';
+import { PrimaryLink, SecondaryLink } from './components/Button';
 
 const DOT: Record<PhaseKey, string> = { sales: 'bg-sales', hr: 'bg-hr', aidev: 'bg-aidev' };
 const BORDER: Record<PhaseKey, string> = { sales: 'border-sales/35', hr: 'border-hr/35', aidev: 'border-aidev/35' };
-const TEXT: Record<PhaseKey, string> = { sales: 'text-sales-deep', hr: 'text-hr-deep', aidev: 'text-aidev-deep' };
 const TINT: Record<PhaseKey, string> = {
   sales: 'bg-sales-tint text-sales-deep',
   hr: 'bg-hr-tint text-hr-deep',
@@ -60,7 +60,7 @@ function PromoteStep({ phase }: { phase: PhaseKey }) {
           <path d="M12 5v14M6 13l6 6 6-6" />
         </svg>
       </span>
-      <span className={`rounded-full px-2 py-[3px] font-pixel text-[8px] uppercase tracking-[0.16em] ${TINT[phase]}`}>
+      <span className={`rounded-full px-2 py-[3px] font-pixel text-nano uppercase tracking-[0.16em] ${TINT[phase]}`}>
         Promoted to
       </span>
     </div>
@@ -76,28 +76,28 @@ function RoleBlock({ r, step, total }: { r: FlatRole; step: number; total: numbe
           <div className="flex items-center gap-2">
             {showStep && (
               <span
-                className={`grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full font-pixel text-[9px] font-bold text-white ${DOT[r.phase]}`}
+                className={`grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full font-pixel text-eyebrow font-bold text-white ${DOT[r.phase]}`}
                 aria-label={`Step ${step} of ${total}`}
               >
                 {step}
               </span>
             )}
-            <div className="font-sans text-[15px] font-bold leading-tight text-ink">{r.title}</div>
+            <div className="font-sans text-ui font-bold leading-tight text-ink">{r.title}</div>
           </div>
-          <span className={`mt-1.5 inline-block rounded-full px-2 py-0.5 font-sans text-[9.5px] font-semibold uppercase tracking-wide ${TINT[r.phase]}`}>
+          <span className={`mt-1.5 inline-block rounded-full px-2 py-0.5 font-sans text-eyebrow font-semibold uppercase tracking-wide ${TINT[r.phase]}`}>
             {r.phaseLabel}
           </span>
         </div>
         <div className="shrink-0 text-right">
-          <div className="font-sans text-[11.5px] text-ink-faint">{r.dates}</div>
+          <div className="font-sans text-caption text-ink-faint">{r.dates}</div>
           {r.current && (
-            <span className={`mt-1 inline-block rounded px-1.5 py-0.5 font-pixel text-[8px] text-white ${DOT[r.phase]}`}>NOW</span>
+            <span className={`mt-1 inline-block rounded px-1.5 py-0.5 font-pixel text-nano text-white ${DOT[r.phase]}`}>NOW</span>
           )}
         </div>
       </div>
       <ul className="mt-2 flex flex-col gap-1">
         {r.points.map((pt, idx) => (
-          <li key={idx} className="relative pl-4 font-sans text-[12.5px] leading-snug text-ink-soft">
+          <li key={idx} className="relative pl-4 font-sans text-label leading-snug text-ink-soft">
             <span className={`absolute left-0 top-[6px] h-1.5 w-1.5 rotate-45 ${DOT[r.phase]}`} aria-hidden="true" />
             {pt}
           </li>
@@ -111,11 +111,11 @@ export function ResumeDossier() {
   const cvHref = import.meta.env.BASE_URL + CONTACT.cv;
   return (
     <div>
-      <span className="font-pixel text-[9px] uppercase tracking-widest text-teal-deep">Career path</span>
-      <h2 id="modal-title" className="mb-1 mt-2 font-sans text-[24px] font-bold text-ink">
+      <span className="font-pixel text-eyebrow uppercase tracking-widest text-teal-deep">Career path</span>
+      <h2 id="modal-title" className="mb-1 mt-2 font-sans text-display font-bold text-ink">
         From sales into AI development
       </h2>
-      <p className="mb-5 font-sans text-[13px] text-ink-soft">Three companies, six roles, one climb from sales into AI development.</p>
+      <p className="mb-5 font-sans text-small text-ink-soft">Three companies, six roles, one climb from sales into AI development.</p>
 
       <ol className="relative ml-2 border-l-2 border-line pl-6 pr-1">
         {GROUPS.map((g, gi) => {
@@ -128,7 +128,7 @@ export function ResumeDossier() {
             >
               {/* company node on the spine */}
               <span
-                className={`absolute -left-[27px] top-0 grid h-6 w-6 place-items-center rounded-full border-2 border-panel font-pixel text-[10px] font-bold text-white ${DOT[g.headPhase]}`}
+                className={`absolute -left-[27px] top-0 grid h-6 w-6 place-items-center rounded-full border-2 border-panel font-pixel text-micro font-bold text-white ${DOT[g.headPhase]}`}
                 aria-hidden="true"
               >
                 {INITIAL[g.company] ?? g.company.charAt(0)}
@@ -137,17 +137,17 @@ export function ResumeDossier() {
               {/* company header: name, span, role count, NOW if current */}
               <div className="mb-2 flex items-baseline justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="font-sans text-[17px] font-bold leading-tight text-ink">{g.company}</div>
+                  <div className="font-sans text-name font-bold leading-tight text-ink">{g.company}</div>
                   {multi && (
-                    <div className="font-sans text-[11px] text-ink-faint">
+                    <div className="font-sans text-caption text-ink-faint">
                       {g.roles.length} roles · a {g.roles.length}-step climb
                     </div>
                   )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="font-sans text-[11.5px] text-ink-faint">{g.span}</span>
+                  <span className="font-sans text-caption text-ink-faint">{g.span}</span>
                   {g.current && (
-                    <span className={`inline-block rounded px-1.5 py-0.5 font-pixel text-[8px] text-white ${DOT[g.headPhase]}`}>NOW</span>
+                    <span className={`inline-block rounded px-1.5 py-0.5 font-pixel text-nano text-white ${DOT[g.headPhase]}`}>NOW</span>
                   )}
                 </div>
               </div>
@@ -167,39 +167,27 @@ export function ResumeDossier() {
       </ol>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
-        <span className="font-sans text-[12px] text-ink-faint">{EDUCATION}</span>
+        <span className="font-sans text-label text-ink-faint">{EDUCATION}</span>
         <div className="flex flex-wrap items-center gap-2">
-          <a
-            href={`mailto:${CONTACT.email}`}
-            className="ui-focus-panel inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 font-sans text-[13px] font-semibold text-teal-deep transition-colors duration-150 hover:border-teal/60 hover:bg-sunken"
-          >
+          <SecondaryLink href={`mailto:${CONTACT.email}`}>
             Email
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="3" y="5" width="18" height="14" rx="2" />
               <path d="m4 7 8 5 8-5" />
             </svg>
-          </a>
-          <a
-            href={LINKEDIN}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ui-focus-panel inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 font-sans text-[13px] font-semibold text-teal-deep transition-colors duration-150 hover:border-teal/60 hover:bg-sunken"
-          >
+          </SecondaryLink>
+          <SecondaryLink href={LINKEDIN} target="_blank" rel="noopener noreferrer">
             LinkedIn
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M7 17 17 7M9 7h8v8" />
             </svg>
-          </a>
-          <a
-            href={cvHref}
-            download="Sayed-Jehad-CV.pdf"
-            className="ui-focus-panel inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-teal-deep px-4 font-sans text-[13px] font-bold text-white shadow-chip transition-colors duration-150 hover:bg-teal"
-          >
+          </SecondaryLink>
+          <PrimaryLink href={cvHref} download="Sayed-Jehad-CV.pdf">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
             </svg>
             Download CV
-          </a>
+          </PrimaryLink>
         </div>
       </div>
     </div>

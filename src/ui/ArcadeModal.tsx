@@ -68,6 +68,7 @@ export function ArcadeModal() {
   }, [screen, activeGameId]);
 
   // dev hook for verification (stripped from prod builds)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- dev-only; re-registers each render to keep the screen getter fresh
   useEffect(() => {
     if (import.meta.env.DEV) {
       (window as unknown as { __arcade?: unknown }).__arcade = {

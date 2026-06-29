@@ -7,6 +7,7 @@ import { drawDoor } from './door';
 import { drawBird } from './birds';
 import type { BirdsState } from '../systems/birds';
 import { drawSky } from '../env/sky';
+import { drawSea } from './sea';
 
 // Cozy, warm, Moonlighter-inspired cottage-studio courtyard where Sayed waits.
 const LAWNS = [
@@ -203,7 +204,8 @@ export function drawPlaza(vp: Viewport, world: { player: Entity; npc: Entity; lo
   const y0 = Math.floor(vp.cam.y) - 40;
   const x1 = vp.cam.x + vp.vw / vp.zoom + 40;
   const y1 = vp.cam.y + vp.vh / vp.zoom + 40;
-  drawSky(vp, x0, y0, x1, y1); // paved-floor backdrop behind the cottage (completes the courtyard)
+  drawSky(vp, x0, y0, x1, y1); // deep-water backdrop (fills any margin behind the cottage)
+  drawSea(vp); // sea band above/around the cottage: water + shoreline + dolphins + fish + gulls
 
   staticLayer(vp, 'plaza:bg', 480, 432, buildPlazaBg); // baked: paving + welcome path + lawns
   drawGrass(vp, world.player);

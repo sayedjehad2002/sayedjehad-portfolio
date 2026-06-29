@@ -221,8 +221,8 @@ export function ConversationPanel() {
             </div>
             <div className="flex min-w-0 flex-1 flex-col justify-center">
               <div className="flex items-center gap-2">
-                <span className="font-pixel text-[17px] text-ink">{speaker.name}</span>
-                <span className="rounded-full bg-[#F6E0CC] px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-[#7E3F12]">
+                <span className="font-pixel text-name text-ink">{speaker.name}</span>
+                <span className="rounded-full bg-[#F6E0CC] px-2 py-0.5 font-sans text-micro font-semibold uppercase tracking-wide text-[#7E3F12]">
                   {speaker.role}
                 </span>
               </div>
@@ -232,7 +232,7 @@ export function ConversationPanel() {
           <div className="mt-3 border-t border-line pt-3">
             {view.kind === 'menu' ? (
               <div className="flex flex-col gap-2">
-                <p className="font-pixel text-[9px] uppercase tracking-widest text-teal-deep">Ask The Guide</p>
+                <p className="font-pixel text-eyebrow uppercase tracking-widest text-teal-deep">Ask The Guide</p>
                 <ul className="flex flex-col gap-2">
                   {qa.map((item, i) => (
                     <li key={item.id}>
@@ -241,7 +241,7 @@ export function ConversationPanel() {
                           questionRefs.current[i] = el;
                         }}
                         onClick={() => ask(i)}
-                        className="min-h-[44px] w-full rounded-xl border border-line bg-white/70 px-3 py-2.5 text-left font-sans text-[14px] text-ink outline-none transition-colors hover:border-teal/50 hover:bg-white focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
+                        className="min-h-[44px] w-full rounded-xl border border-line bg-white/70 px-3 py-2.5 text-left font-sans text-body text-ink outline-none transition-colors hover:border-teal/50 hover:bg-white focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
                       >
                         {item.q}
                       </button>
@@ -251,7 +251,7 @@ export function ConversationPanel() {
                 <button
                   onClick={closeConversation}
                   aria-keyshortcuts="Escape"
-                  className="mt-1 min-h-[44px] self-start rounded-lg px-3 py-2.5 font-sans text-[13px] font-semibold text-ink-soft outline-none transition-colors hover:text-teal-deep focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
+                  className="mt-1 min-h-[44px] self-start rounded-lg px-3 py-2.5 font-sans text-small font-semibold text-ink-soft outline-none transition-colors hover:text-teal-deep focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
                 >
                   Leave ▸
                 </button>
@@ -266,8 +266,8 @@ export function ConversationPanel() {
                     typing ? 'cursor-pointer hover:bg-teal/5' : 'cursor-default'
                   }`}
                 >
-                  <p className="font-sans text-[13px] italic text-ink-soft">&ldquo;{asked?.q ?? ''}&rdquo;</p>
-                  <p className="whitespace-pre-line font-sans text-[16px] leading-[1.6] text-ink">
+                  <p className="font-sans text-small italic text-ink-soft">&ldquo;{asked?.q ?? ''}&rdquo;</p>
+                  <p className="whitespace-pre-line font-sans text-lead leading-[1.6] text-ink">
                     {fullAnswer.slice(0, shown)}
                     {typing && <span className="caret font-pixel text-amber">▋</span>}
                   </p>
@@ -280,14 +280,14 @@ export function ConversationPanel() {
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={backToMenu}
-                      className="min-h-[44px] rounded-xl border border-line bg-white/70 px-4 py-2.5 font-sans text-[14px] font-semibold text-teal-deep outline-none transition-colors hover:border-teal/50 hover:bg-white focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
+                      className="min-h-[44px] rounded-xl border border-line bg-white/70 px-4 py-2.5 font-sans text-body font-semibold text-teal-deep outline-none transition-colors hover:border-teal/50 hover:bg-white focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
                     >
                       Ask another
                     </button>
                     <button
                       onClick={closeConversation}
                       aria-keyshortcuts="Escape"
-                      className="min-h-[44px] rounded-lg px-3 py-2.5 font-sans text-[13px] font-semibold text-ink-soft outline-none transition-colors hover:text-teal-deep focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
+                      className="min-h-[44px] rounded-lg px-3 py-2.5 font-sans text-small font-semibold text-ink-soft outline-none transition-colors hover:text-teal-deep focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
                     >
                       Leave ▸
                     </button>

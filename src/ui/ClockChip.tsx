@@ -29,8 +29,8 @@ export function ClockChip() {
         <circle cx="12" cy="12" r="9" />
         <path d="M12 7v5l3 2" />
       </svg>
-      <span className="font-sans text-[12.5px] font-semibold leading-none text-white tabular-nums">{time}</span>
-      <span className="font-sans text-[10px] font-medium leading-none text-on-dark-faint">Bahrain</span>
+      <span className="font-sans text-label font-semibold leading-none text-white tabular-nums">{time}</span>
+      <span className="font-sans text-micro font-medium leading-none text-on-dark-faint">Bahrain</span>
     </div>
   );
 }

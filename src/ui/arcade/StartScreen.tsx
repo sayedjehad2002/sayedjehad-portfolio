@@ -34,7 +34,7 @@ export function StartScreen({ onStart, onExit, hiScore, reduced }: StartScreenPr
   return (
     <div className="anim-fade absolute inset-0 z-10 flex flex-col items-center justify-between px-5 py-3 text-center" onKeyDown={onMenuKey}>
       {/* top status row (decorative) */}
-      <div className="flex w-full items-start justify-between font-pixel text-[8px] uppercase tracking-wider" aria-hidden="true">
+      <div className="flex w-full items-start justify-between font-pixel text-nano uppercase tracking-wider" aria-hidden="true">
         <div className="text-left leading-tight">
           <div className="text-[#5FE0D0]">1UP</div>
           <div className="text-[#E8EDF4]">{pad7(0)}</div>
@@ -52,7 +52,7 @@ export function StartScreen({ onStart, onExit, hiScore, reduced }: StartScreenPr
 
       {/* hero wordmark */}
       <div className="flex flex-col items-center">
-        <span className="font-pixel text-[10px] uppercase tracking-[0.34em] text-[#5FE0D0]" aria-hidden="true">
+        <span className="font-pixel text-micro uppercase tracking-[0.34em] text-[#5FE0D0]" aria-hidden="true">
           Sayed Jehad
         </span>
         <h2
@@ -63,7 +63,7 @@ export function StartScreen({ onStart, onExit, hiScore, reduced }: StartScreenPr
           <br />
           World
         </h2>
-        <span className="mt-2 font-pixel text-[9px] uppercase tracking-[0.3em] text-[#5FE0D0]" aria-hidden="true">
+        <span className="mt-2 font-pixel text-eyebrow uppercase tracking-[0.3em] text-[#5FE0D0]" aria-hidden="true">
           Arcade System
         </span>
       </div>
@@ -78,7 +78,7 @@ export function StartScreen({ onStart, onExit, hiScore, reduced }: StartScreenPr
               onClick={it.onClick}
               onFocus={() => setSel(i)}
               autoFocus={i === 0}
-              className="ui-focus-dark flex min-h-[44px] items-center gap-2 rounded-md px-4 font-pixel text-[16px] uppercase tracking-wider text-[#FFE08A] outline-none transition-colors hover:text-[#ffffff]"
+              className="ui-focus-dark flex min-h-[44px] items-center gap-2 rounded-md px-4 font-pixel text-lead uppercase tracking-wider text-[#FFE08A] outline-none transition-colors hover:text-[#ffffff]"
             >
               <span className={'w-4 text-[#FF5A4D] [text-shadow:0_0_6px_rgba(255,90,77,0.7)] ' + (sel === i ? 'opacity-100' : 'opacity-0')} aria-hidden="true">
                 ▸
@@ -87,13 +87,13 @@ export function StartScreen({ onStart, onExit, hiScore, reduced }: StartScreenPr
             </button>
           ))}
         </div>
-        <div className={'mt-1.5 font-pixel text-[10px] uppercase tracking-[0.3em] text-[#FFE08A] ' + (reduced ? '' : 'caret')} aria-hidden="true">
+        <div className={'mt-1.5 font-pixel text-micro uppercase tracking-[0.3em] text-[#FFE08A] ' + (reduced ? '' : 'caret')} aria-hidden="true">
           Press Start
         </div>
       </div>
 
       {/* bottom row (decorative) */}
-      <div className="flex w-full items-end justify-between font-pixel text-[8px] uppercase tracking-wider" aria-hidden="true">
+      <div className="flex w-full items-end justify-between font-pixel text-nano uppercase tracking-wider" aria-hidden="true">
         <span className="text-[#9fb0c0]">Credit 01</span>
         <span className="text-[#6c7d8f]">(C) 2026 Sayed-OS</span>
       </div>

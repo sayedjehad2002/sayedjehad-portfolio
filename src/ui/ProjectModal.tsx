@@ -1,4 +1,5 @@
 import { PROJECTS } from '../data/projects';
+import { PrimaryLink } from './components/Button';
 
 const ACCENT_BG: Record<string, string> = {
   aidev: 'bg-aidev-tint text-aidev-deep',
@@ -41,32 +42,27 @@ export function ProjectModal({ id }: { id: string }) {
           <div className="mt-2 h-1.5 w-20 rounded bg-white/25" />
         </div>
       </div>
-      <span className="font-pixel text-[9px] uppercase tracking-widest text-teal-deep">Project</span>
-      <h2 id="modal-title" className="mb-2 mt-2 font-sans text-[24px] font-bold leading-tight text-ink">
+      <span className="font-pixel text-eyebrow uppercase tracking-widest text-teal-deep">Project</span>
+      <h2 id="modal-title" className="mb-2 mt-2 font-sans text-display font-bold leading-tight text-ink">
         {p.name}
       </h2>
-      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${ACCENT_BG[p.accent]}`}>
+      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-caption font-semibold uppercase tracking-wide ${ACCENT_BG[p.accent]}`}>
         {p.tag}
       </span>
-      <p className="my-4 font-sans text-[15px] leading-relaxed text-ink-soft">{p.desc}</p>
+      <p className="my-4 font-sans text-ui leading-relaxed text-ink-soft">{p.desc}</p>
       <div className="mb-5 flex flex-wrap gap-2">
         {p.stack.map((s) => (
-          <span key={s} className="rounded-md border border-line bg-sunken px-2.5 py-1 text-[12px] font-medium text-ink-soft transition-colors duration-150 hover:border-teal/50 hover:bg-white hover:text-ink">
+          <span key={s} className="rounded-md border border-line bg-sunken px-2.5 py-1 text-label font-medium text-ink-soft transition-colors duration-150 hover:border-teal/50 hover:bg-white hover:text-ink">
             {s}
           </span>
         ))}
       </div>
       {p.url ? (
-        <a
-          href={p.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ui-focus-panel inline-flex items-center gap-2 rounded-panel bg-teal-deep px-5 py-3 font-sans text-[14px] font-semibold text-white shadow-[0_5px_0_#0c4a4c] outline-none transition-transform duration-150 hover:brightness-105 active:translate-y-0.5 active:shadow-[0_2px_0_#0c4a4c]"
-        >
+        <PrimaryLink href={p.url} target="_blank" rel="noopener noreferrer">
           Visit live <span aria-hidden="true">↗</span>
-        </a>
+        </PrimaryLink>
       ) : (
-        <span className="inline-flex items-center gap-2 rounded-panel border border-line bg-sunken px-5 py-3 font-sans text-[14px] text-ink-faint">
+        <span className="inline-flex items-center gap-2 rounded-panel border border-line bg-sunken px-5 py-3 font-sans text-body text-ink-faint">
           Internal tool, not public
         </span>
       )}

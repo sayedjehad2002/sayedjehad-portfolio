@@ -177,10 +177,10 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
         {playing && (
           <button
             onClick={goToMenu}
-            className="ui-focus-dark absolute right-2 top-2 grid min-h-[44px] place-items-center rounded-lg bg-black/40 px-3 font-sans text-[12px] font-semibold text-[#cdd8e4] outline-none backdrop-blur-sm transition hover:bg-black/60"
+            className="ui-focus-dark absolute right-2 top-2 grid min-h-[44px] place-items-center rounded-lg bg-black/40 px-3 font-sans text-label font-semibold text-[#cdd8e4] outline-none backdrop-blur-sm transition hover:bg-black/60"
           >
             <span>
-              <kbd className="mr-1 font-pixel text-[8px] text-[#8aa0b2]">Esc</kbd> Menu
+              <kbd className="mr-1 font-pixel text-nano text-[#8aa0b2]">Esc</kbd> Menu
             </span>
           </button>
         )}
@@ -191,7 +191,7 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
             <button
               onClick={doPause}
               autoFocus
-              className="ui-focus-dark min-h-[44px] rounded-xl bg-[#5FE0D0] px-6 font-pixel text-[12px] tracking-wide text-[#04130d] shadow-[0_5px_0_#1f8a7e] outline-none"
+              className="ui-focus-dark min-h-[44px] rounded-xl bg-[#5FE0D0] px-6 font-pixel text-label tracking-wide text-[#04130d] shadow-[0_5px_0_#1f8a7e] outline-none"
             >
               Resume build
             </button>
@@ -208,7 +208,7 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
                 turn(stateRef.current, b.dx, b.dy);
               }}
               aria-label={'Steer ' + (b.dy < 0 ? 'up' : b.dy > 0 ? 'down' : b.dx < 0 ? 'left' : 'right')}
-              className={'ui-focus-dark absolute grid h-11 w-11 touch-none place-items-center rounded-lg bg-black/45 font-pixel text-[14px] text-[#cdd8e4] outline-none backdrop-blur-sm ' + b.pos}
+              className={'ui-focus-dark absolute grid h-11 w-11 touch-none place-items-center rounded-lg bg-black/45 font-pixel text-body text-[#cdd8e4] outline-none backdrop-blur-sm ' + b.pos}
             >
               {b.label}
             </button>
@@ -217,9 +217,9 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
         {phase === 'menu' && (
           <div className="absolute inset-0 flex flex-col items-center overflow-y-auto bg-[#070a16]/85 p-4 backdrop-blur-[2px]">
             <div className="my-auto w-full max-w-md text-center">
-              <span className="font-pixel text-[9px] uppercase tracking-[0.34em] text-[#7A5BA6]">Dependency Dash</span>
+              <span className="font-pixel text-eyebrow uppercase tracking-[0.34em] text-[#7A5BA6]">Dependency Dash</span>
               <h2 className="mt-2 font-pixel text-[clamp(18px,4.6vw,26px)] leading-[1.4] text-[#FFE08A] [text-shadow:0_3px_0_#1c130a]">npm install --survive</h2>
-              <p className="mx-auto mt-2 max-w-xs font-sans text-[12.5px] leading-snug text-[#9fb0c0]">Eat the packages, grow your import chain, and never import yourself.</p>
+              <p className="mx-auto mt-2 max-w-xs font-sans text-label leading-snug text-[#9fb0c0]">Eat the packages, grow your import chain, and never import yourself.</p>
               <div className="mt-5 grid gap-2.5">
                 {DIFFS.map((d) => (
                   <button
@@ -229,17 +229,17 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
                     className="ui-focus-dark group flex min-h-[44px] items-center justify-between gap-3 rounded-xl border-2 border-[#243240] bg-[#0f1226] px-4 py-3 text-left outline-none transition-colors hover:border-[#7A5BA6] hover:bg-[#15183a]"
                   >
                     <span>
-                      <span className="font-pixel text-[13px] text-[#FFE08A]">{d.label}</span>
-                      <span className="mt-0.5 block font-sans text-[11px] leading-snug text-[#8aa0b2]">{d.blurb}</span>
+                      <span className="font-pixel text-small text-[#FFE08A]">{d.label}</span>
+                      <span className="mt-0.5 block font-sans text-caption leading-snug text-[#8aa0b2]">{d.blurb}</span>
                     </span>
                     <span className="shrink-0 text-right">
-                      <span className="block font-pixel text-[8px] uppercase tracking-wider text-[#5d6b7c]">Best</span>
-                      <span className="font-pixel text-[13px] text-[#C0A8DC]">{bests[d.key]}</span>
+                      <span className="block font-pixel text-nano uppercase tracking-wider text-[#5d6b7c]">Best</span>
+                      <span className="font-pixel text-small text-[#C0A8DC]">{bests[d.key]}</span>
                     </span>
                   </button>
                 ))}
               </div>
-              <div className="mt-4 flex items-center justify-center gap-3 font-sans text-[11px] text-[#6c7d8f]">
+              <div className="mt-4 flex items-center justify-center gap-3 font-sans text-caption text-[#6c7d8f]">
                 {coarse ? (
                   <>
                     <span>Swipe or d-pad to steer</span>
@@ -254,8 +254,8 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
                   </>
                 )}
               </div>
-              <button onClick={onExit} className="ui-focus-dark mt-3 min-h-[44px] rounded-lg px-4 font-sans text-[12px] font-semibold text-[#8aa0b2] outline-none transition-colors hover:text-[#dfeaf2]">
-                <kbd className="mr-1 rounded border border-[#2a3a48] bg-[#0f1226] px-1.5 py-0.5 font-pixel text-[8px]">Esc</kbd>
+              <button onClick={onExit} className="ui-focus-dark mt-3 min-h-[44px] rounded-lg px-4 font-sans text-label font-semibold text-[#8aa0b2] outline-none transition-colors hover:text-[#dfeaf2]">
+                <kbd className="mr-1 rounded border border-[#2a3a48] bg-[#0f1226] px-1.5 py-0.5 font-pixel text-nano">Esc</kbd>
                 Back to games
               </button>
             </div>
@@ -266,13 +266,13 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
           <div className="absolute inset-0 flex flex-col items-center overflow-y-auto bg-[#070a16]/95 p-4 backdrop-blur-[3px]">
             <div className="my-auto w-full max-w-sm text-center">
               {result.cause && (
-                <span className="font-pixel text-[10px] uppercase tracking-[0.12em]" style={{ color: CAUSE[result.cause].tone, textShadow: '0 0 10px ' + CAUSE[result.cause].tone + '55' }}>
+                <span className="font-pixel text-micro uppercase tracking-[0.12em]" style={{ color: CAUSE[result.cause].tone, textShadow: '0 0 10px ' + CAUSE[result.cause].tone + '55' }}>
                   {CAUSE[result.cause].title}
                 </span>
               )}
-              {result.cause && <div className="mt-1 font-pixel text-[7px] uppercase tracking-wider text-[#6c7d8f]">{CAUSE[result.cause].sub}</div>}
-              {result.newBest && <div className="mt-2 font-pixel text-[10px] uppercase tracking-[0.2em] text-[#FFB454] [text-shadow:0_0_12px_rgba(255,180,84,0.6)]">★ New best ★</div>}
-              <div className="mt-3 font-pixel text-[42px] leading-none text-[#FFE08A] [text-shadow:0_4px_0_#1c130a]">{result.score}</div>
+              {result.cause && <div className="mt-1 font-pixel text-pico uppercase tracking-wider text-[#6c7d8f]">{CAUSE[result.cause].sub}</div>}
+              {result.newBest && <div className="mt-2 font-pixel text-micro uppercase tracking-[0.2em] text-[#FFB454] [text-shadow:0_0_12px_rgba(255,180,84,0.6)]">★ New best ★</div>}
+              <div className="mt-3 font-pixel text-score leading-none text-[#FFE08A] [text-shadow:0_4px_0_#1c130a]">{result.score}</div>
               <div className="mt-5 grid grid-cols-3 gap-2">
                 <Stat label="Deps" value={String(result.deps)} tone="#5FE0D0" />
                 <Stat label="Packages" value={String(result.packages)} tone="#E8EDF4" />
@@ -283,14 +283,14 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
                 <Stat label="Best" value={String(result.best)} tone="#C0A8DC" />
               </div>
               <div className="mt-6 flex flex-col gap-2.5">
-                <button onClick={() => startGame(result.difficulty)} autoFocus className="ui-focus-dark min-h-[44px] rounded-xl bg-[#7A5BA6] px-6 font-pixel text-[12px] tracking-wide text-[#0d0a16] shadow-[0_5px_0_#4a3268] outline-none transition active:translate-y-[2px] active:shadow-[0_3px_0_#4a3268]">
+                <button onClick={() => startGame(result.difficulty)} autoFocus className="ui-focus-dark min-h-[44px] rounded-xl bg-[#7A5BA6] px-6 font-pixel text-label tracking-wide text-[#0d0a16] shadow-[0_5px_0_#4a3268] outline-none transition active:translate-y-[2px] active:shadow-[0_3px_0_#4a3268]">
                   Run again
                 </button>
                 <div className="flex gap-2.5">
-                  <button onClick={goToMenu} className="ui-focus-dark min-h-[44px] flex-1 rounded-xl border-2 border-[#243240] bg-[#0f1226] font-sans text-[13px] font-semibold text-[#cdd8e4] outline-none transition-colors hover:border-[#37566a]">
+                  <button onClick={goToMenu} className="ui-focus-dark min-h-[44px] flex-1 rounded-xl border-2 border-[#243240] bg-[#0f1226] font-sans text-small font-semibold text-[#cdd8e4] outline-none transition-colors hover:border-[#37566a]">
                     Change difficulty
                   </button>
-                  <button onClick={onExit} className="ui-focus-dark min-h-[44px] flex-1 rounded-xl border-2 border-transparent font-sans text-[13px] font-semibold text-[#8aa0b2] outline-none transition-colors hover:text-[#dfeaf2]">
+                  <button onClick={onExit} className="ui-focus-dark min-h-[44px] flex-1 rounded-xl border-2 border-transparent font-sans text-small font-semibold text-[#8aa0b2] outline-none transition-colors hover:text-[#dfeaf2]">
                     Games
                   </button>
                 </div>
@@ -306,8 +306,8 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
 function Stat({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
     <div className="rounded-lg border border-[#1c2030] bg-[#0f1226]/70 px-2 py-1.5">
-      <div className="font-pixel text-[7px] uppercase tracking-wider text-[#5d6b7c]">{label}</div>
-      <div className="mt-0.5 font-pixel text-[13px]" style={{ color: tone }}>
+      <div className="font-pixel text-pico uppercase tracking-wider text-[#5d6b7c]">{label}</div>
+      <div className="mt-0.5 font-pixel text-small" style={{ color: tone }}>
         {value}
       </div>
     </div>

@@ -63,6 +63,21 @@ export const palette = {
   flower: { red: '#D8593A', gold: '#FFCF6E', violet: '#8A6CB0', pink: '#E59AB4', cream: '#F2EAD6', stem: '#4C7E37', leaf: '#5E9A46', core: '#FFE6A8' },
   glowKit: { lamp: '#FFD98A', window: '#FFE6B0', interact: '#FFE08A' },
 
+  // --- the sea behind the cottage (cool, harmonised with the teal accent family) ---
+  sea: {
+    deep: '#175766',
+    mid: '#1F7E84',
+    shallow: '#3FA0A0',
+    foam: '#EAF6F3',
+    sand: '#D9C290',
+    sandSh: '#C2A971',
+    dolphin: '#566E7A',
+    dolphinHi: '#7C97A2',
+    belly: '#CBD8DC',
+    fish: '#2E6E72',
+    fishGold: '#E0843C',
+  },
+
   // --- timeline phase accents (warm-harmonised, colourblind-safe) ---
   phase: {
     sales: { base: '#C2682B', tint: '#F6E0CC', deep: '#7E3F12' },

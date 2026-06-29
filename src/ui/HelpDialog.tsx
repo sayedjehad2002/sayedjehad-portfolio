@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ModalShell } from './ModalShell';
 import { EnvSettings } from './EnvSettings';
+import { PrimaryButton } from './components/Button';
 
 export function HelpButton() {
   const [open, setOpen] = useState(false);
@@ -21,9 +22,9 @@ export function HelpButton() {
       </button>
       {open && (
         <ModalShell onClose={() => setOpen(false)} labelledBy="help-title" width="max-w-sm">
-          <span className="font-pixel text-[9px] uppercase tracking-widest text-teal-deep">How to play</span>
-          <h2 id="help-title" className="mb-3 mt-2 font-sans text-[22px] font-bold leading-tight text-ink">Controls</h2>
-          <ul className="flex flex-col gap-2.5 font-sans text-[15px] text-ink-soft">
+          <span className="font-pixel text-eyebrow uppercase tracking-widest text-teal-deep">How to play</span>
+          <h2 id="help-title" className="mb-3 mt-2 font-sans text-display font-bold leading-tight text-ink">Controls</h2>
+          <ul className="flex flex-col gap-2.5 font-sans text-ui text-ink-soft">
             {[
               ['Move', 'W A S D or arrows'],
               ['Interact / talk', 'E'],
@@ -37,14 +38,11 @@ export function HelpButton() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 font-sans text-[13px] text-ink-faint">Walk up to Sayed, press E to talk, then step through the door to see his work.</p>
+          <p className="mt-4 font-sans text-small text-ink-faint">Walk up to Sayed, press E to talk, then step through the door to see his work.</p>
           <EnvSettings />
-          <button
-            onClick={() => setOpen(false)}
-            className="ui-focus-panel mt-5 rounded-panel bg-teal-deep px-5 py-2.5 font-sans text-[14px] font-semibold text-white outline-none transition-transform duration-150 hover:brightness-105 active:translate-y-0.5"
-          >
+          <PrimaryButton onClick={() => setOpen(false)} className="mt-5">
             Got it, let me play
-          </button>
+          </PrimaryButton>
         </ModalShell>
       )}
     </>

@@ -87,16 +87,23 @@ export function DialogueBar() {
       >
         <button onClick={advance} aria-label="Reveal or continue" aria-keyshortcuts="Space Enter" className="flex w-full cursor-pointer items-stretch gap-3 rounded-xl text-left outline-none transition-colors hover:bg-teal/5 focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel">
           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 border-teal bg-white shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)] sm:h-[88px] sm:w-[88px]">
-            <img src={photo} alt={`Photo of ${CHARACTER.name}`} className="h-full w-full rounded-[10px] object-cover" />
+            <img
+              src={photo}
+              alt={`Photo of ${CHARACTER.name}`}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+              className="h-full w-full rounded-[10px] object-cover"
+            />
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="mb-1.5 flex items-center gap-2 border-b border-line pb-1.5">
-              <span className="font-pixel text-[17px] text-ink">{CHARACTER.name}</span>
-              <span className="rounded-full bg-[#D7EFEA] px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-teal-deep">
+              <span className="font-pixel text-name text-ink">{CHARACTER.name}</span>
+              <span className="rounded-full bg-[#D7EFEA] px-2 py-0.5 font-sans text-micro font-semibold uppercase tracking-wide text-teal-deep">
                 {CHARACTER.role}
               </span>
             </div>
-            <p className="flex-1 font-sans text-[16px] leading-[1.6] text-ink">
+            <p className="flex-1 font-sans text-lead leading-[1.6] text-ink">
               {line.slice(0, shown)}
               {typing && <span className="caret font-pixel text-amber">▋</span>}
             </p>
@@ -108,8 +115,8 @@ export function DialogueBar() {
           </div>
         </button>
         <div className="mt-2 flex items-center justify-between gap-2 pl-[76px] sm:pl-[100px]">
-          <span className="font-sans text-[12px] text-ink-faint">
-            <kbd className="rounded border border-line bg-sunken px-1.5 py-0.5 font-pixel text-[10px] text-ink-soft">Space</kbd>{' '}
+          <span className="font-sans text-label text-ink-faint">
+            <kbd className="rounded border border-line bg-sunken px-1.5 py-0.5 font-pixel text-micro text-ink-soft">Space</kbd>{' '}
             {typing ? 'reveal' : 'continue'}
           </span>
           <button
@@ -119,9 +126,9 @@ export function DialogueBar() {
             }}
             aria-label="Skip dialogue"
             aria-keyshortcuts="Escape S"
-            className="-mr-1 flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 py-2.5 font-sans text-[13px] font-semibold text-ink-soft outline-none transition-colors hover:text-teal-deep focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel active:translate-y-px"
+            className="-mr-1 flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 py-2.5 font-sans text-small font-semibold text-ink-soft outline-none transition-colors hover:text-teal-deep focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel active:translate-y-px"
           >
-            <kbd className="rounded border border-line bg-sunken px-1.5 py-0.5 font-pixel text-[9px] text-ink-faint">Esc</kbd>
+            <kbd className="rounded border border-line bg-sunken px-1.5 py-0.5 font-pixel text-eyebrow text-ink-faint">Esc</kbd>
             Skip ▸
           </button>
         </div>

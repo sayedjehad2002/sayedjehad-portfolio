@@ -13,24 +13,14 @@ import { R, type Viewport } from '../render';
 //    through. Cheap (one cached radial gradient + translate).
 // ---------------------------------------------------------------------------
 
-// The backdrop BEHIND the world (the strip above the cottage + any letterbox
-// margins). Painted as a continuation of the PAVED courtyard floor — warm stone +
-// faint tile seams — so the area behind/above the house reads as the SAME FLOOR and
-// the plaza feels like one complete, enclosed space instead of ending in open sky.
-// Day/night is applied by the screen-space tint, so this layer is static.
-const TILE = 16;
+// The backdrop BEHIND the world is the open SEA. This fills the whole visible
+// backdrop (the band above the cottage + any letterbox margin) with deep water so
+// there is never a gap; the detailed near-shore water, shoreline and sea life are
+// baked / drawn by draw/sea.ts over the world band on top of this. Day/night is
+// applied by the screen-space tint, so this base layer is static (cools to
+// moonlit blue automatically at night).
 export function drawSky(vp: Viewport, x0: number, y0: number, x1: number, y1: number): void {
-  const ctx = vp.ctx;
-  R(ctx, x0, y0, x1 - x0, y1 - y0, P.plaza.stone); // warm paving base
-  // faint 1px tile seams on a world-aligned grid so it reads as paving, not flat fill
-  ctx.save();
-  ctx.globalAlpha = 0.4;
-  ctx.fillStyle = P.plaza.seam;
-  const sx = Math.floor(x0 / TILE) * TILE;
-  const sy = Math.floor(y0 / TILE) * TILE;
-  for (let x = sx; x <= x1; x += TILE) ctx.fillRect(x, y0, 1, y1 - y0);
-  for (let y = sy; y <= y1; y += TILE) ctx.fillRect(x0, y, x1 - x0, 1);
-  ctx.restore();
+  R(vp.ctx, x0, y0, x1 - x0, y1 - y0, P.sea.deep);
 }
 
 export function drawDayNightTint(vp: Viewport): void {

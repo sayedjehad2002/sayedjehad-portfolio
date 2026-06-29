@@ -89,7 +89,7 @@ export function TouchControls() {
           bottom: 'calc(3rem + env(safe-area-inset-bottom))',
           right: 'calc(2rem + env(safe-area-inset-right))',
         }}
-        className="pointer-events-auto absolute grid h-20 w-20 touch-none place-items-center rounded-full bg-teal font-pixel text-[14px] text-[#04130d] shadow-[0_6px_0_#0f5a5c]"
+        className="ui-focus-dark pointer-events-auto absolute grid h-20 w-20 touch-none place-items-center rounded-full bg-teal font-pixel text-body text-[#04130d] shadow-[0_6px_0_#0f5a5c] outline-none"
       >
         E
       </button>
