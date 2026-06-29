@@ -8,6 +8,9 @@ import { HelpButton } from './ui/HelpDialog';
 import { Brand } from './ui/Brand';
 import { TouchControls } from './ui/TouchControls';
 import { AccessibleMenu } from './ui/AccessibleMenu';
+import { ClockChip } from './ui/ClockChip';
+import { DiscoveryToast } from './ui/DiscoveryToast';
+import { CompletionCard } from './ui/CompletionCard';
 
 export default function App() {
   return (
@@ -25,9 +28,12 @@ export default function App() {
       <Brand />
       <HelpButton />
       <SoundToggle />
+      <ClockChip />
       <DialogueBar />
       <ConversationPanel />
       <Modals />
+      <DiscoveryToast />
+      <CompletionCard />
       <TitleCard />
       <TouchControls />
     </>

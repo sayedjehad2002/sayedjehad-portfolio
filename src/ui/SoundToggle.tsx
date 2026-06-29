@@ -27,7 +27,9 @@ export function SoundToggle() {
       aria-pressed={muted}
       onClick={onClick}
       style={pos}
-      className="ui-chip ui-chip-btn ui-focus-dark fixed z-30"
+      className={`ui-chip ui-chip-btn ui-focus-dark fixed z-30 transition-shadow ${
+        muted ? '' : 'shadow-[0_0_10px_rgba(45,212,191,0.45)] ring-1 ring-teal/50'
+      }`}
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none" />

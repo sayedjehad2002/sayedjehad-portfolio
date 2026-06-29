@@ -1,5 +1,5 @@
 import { palette as P } from '../../theme/palette';
-import { R, softShadow, type Viewport } from '../render';
+import { R, softShadow, groundShadow, type Viewport } from '../render';
 import type { Entity } from '../types';
 
 // Sayed: warm, approachable developer in formal smart-casual — crisp cream shirt
@@ -12,8 +12,8 @@ export function drawSayed(vp: Viewport, e: Entity): void {
   const gy = Math.round(e.y);
   const off = vp.reduced ? 0 : e.moving ? -Math.abs(Math.sin(e.anim * Math.PI)) * 1.3 : Math.sin(e.bob) * 0.8;
   const y = Math.round(e.y + off);
-  softShadow(ctx, x, gy + 1, 10, P.shadowSoft);
-  softShadow(ctx, x, gy + 1, 7, P.shadow);
+  groundShadow(vp, x, gy + 1, 10, P.shadowSoft);
+  groundShadow(vp, x, gy + 1, 7, P.shadow);
   const step = e.moving ? (e.frame ? 1 : -1) : 0;
   const back = e.dir === 'up';
 
@@ -182,17 +182,17 @@ function drawSayedHead(vp: Viewport, ctx: CanvasRenderingContext2D, x: number, t
   ctx.fillRect(x + 3, top + 7, 1, 1);
 }
 
-// Recruiter: visitor in a formal earthy blazer with lapels, a tie, a pocket
-// square, a visitor badge, swinging arms and a neat side-parted business cut.
-export function drawRecruiter(vp: Viewport, e: Entity, drinking = false, drinkT = 0): void {
+// Visitor: the guest you play as, in a smart earthy blazer with lapels, a tie, a
+// pocket square, a visitor badge, swinging arms and a neat side-parted cut.
+export function drawVisitor(vp: Viewport, e: Entity, drinking = false, drinkT = 0): void {
   const ctx = vp.ctx;
   const x = Math.round(e.x);
   // lively walk bounce over a planted shadow; gentle idle breathe when still
   const gy = Math.round(e.y);
   const off = vp.reduced ? 0 : e.moving ? -Math.abs(Math.sin(e.anim * Math.PI)) * 1.3 : Math.sin(e.bob) * 0.7;
   const y = Math.round(e.y + off);
-  softShadow(ctx, x, gy + 1, 10, P.shadowSoft);
-  softShadow(ctx, x, gy + 1, 7, P.shadow);
+  groundShadow(vp, x, gy + 1, 10, P.shadowSoft);
+  groundShadow(vp, x, gy + 1, 7, P.shadow);
   const step = e.moving ? (e.frame ? 1 : -1) : 0;
   const back = e.dir === 'up';
 
@@ -206,8 +206,8 @@ export function drawRecruiter(vp: Viewport, e: Entity, drinking = false, drinkT 
   const TIE_HI = '#9C5238';
 
   // pressed trousers + polished shoes
-  R(ctx, x - 5, y - 8, 4, 8 + step, P.recruiter.coatSh);
-  R(ctx, x + 1, y - 8, 4, 8 - step, P.recruiter.coatSh);
+  R(ctx, x - 5, y - 8, 4, 8 + step, P.visitor.coatSh);
+  R(ctx, x + 1, y - 8, 4, 8 - step, P.visitor.coatSh);
   R(ctx, x - 5, y - 8, 1, 8 + step, TROU_HI);
   R(ctx, x + 4, y - 8, 1, 8 - step, TROU_DK);
   R(ctx, x - 2, y - 8, 1, 7, TROU_DK); // centre press crease
@@ -219,19 +219,19 @@ export function drawRecruiter(vp: Viewport, e: Entity, drinking = false, drinkT 
   // gently swinging blazer-sleeve arms with skin hands, opposite phase to the legs
   const la = step;
   const ra = -step;
-  R(ctx, x - 9, y - 18 + la, 2, 7, P.recruiter.coat);
-  R(ctx, x - 9, y - 18 + la, 1, 7, P.recruiter.coatHi); // sleeve lit edge
+  R(ctx, x - 9, y - 18 + la, 2, 7, P.visitor.coat);
+  R(ctx, x - 9, y - 18 + la, 1, 7, P.visitor.coatHi); // sleeve lit edge
   R(ctx, x - 9, y - 12 + la, 2, 1, COAT_DK); // cuff
   R(ctx, x - 9, y - 11 + la, 2, 2, P.skin.hi); // hand
-  R(ctx, x + 7, y - 18 + ra, 2, 7, P.recruiter.coat);
-  R(ctx, x + 8, y - 18 + ra, 1, 7, P.recruiter.coatSh); // sleeve shade
+  R(ctx, x + 7, y - 18 + ra, 2, 7, P.visitor.coat);
+  R(ctx, x + 8, y - 18 + ra, 1, 7, P.visitor.coatSh); // sleeve shade
   R(ctx, x + 7, y - 12 + ra, 2, 1, COAT_DK); // cuff
   R(ctx, x + 7, y - 11 + ra, 2, 2, P.skin.hi); // hand
 
   // tailored blazer body with highlight (left) and shadow (right) sides
-  R(ctx, x - 7, y - 19, 14, 12, P.recruiter.coat);
-  R(ctx, x - 7, y - 19, 3, 12, P.recruiter.coatHi);
-  R(ctx, x + 4, y - 19, 3, 12, P.recruiter.coatSh);
+  R(ctx, x - 7, y - 19, 14, 12, P.visitor.coat);
+  R(ctx, x - 7, y - 19, 3, 12, P.visitor.coatHi);
+  R(ctx, x + 4, y - 19, 3, 12, P.visitor.coatSh);
   R(ctx, x - 7, y - 19, 1, 12, '#A08C64'); // bright lit outer edge
   R(ctx, x + 6, y - 19, 1, 12, COAT_DK); // deep shaded outer edge
   R(ctx, x - 7, y - 19, 14, 1, '#8E7C58'); // lit shoulder line
@@ -243,14 +243,14 @@ export function drawRecruiter(vp: Viewport, e: Entity, drinking = false, drinkT 
     R(ctx, x - 1, y - 17, 1, 8, TIE_HI); // tie sheen
     R(ctx, x - 1, y - 9, 2, 1, '#4A2418'); // tie tip
     // notched blazer lapels flaring from the collar
-    R(ctx, x - 4, y - 19, 2, 1, P.recruiter.coatHi);
-    R(ctx, x - 3, y - 18, 1, 2, P.recruiter.coatHi); // left lapel
-    R(ctx, x + 2, y - 19, 2, 1, P.recruiter.coatSh);
-    R(ctx, x + 2, y - 18, 1, 2, P.recruiter.coatSh); // right lapel
+    R(ctx, x - 4, y - 19, 2, 1, P.visitor.coatHi);
+    R(ctx, x - 3, y - 18, 1, 2, P.visitor.coatHi); // left lapel
+    R(ctx, x + 2, y - 19, 2, 1, P.visitor.coatSh);
+    R(ctx, x + 2, y - 18, 1, 2, P.visitor.coatSh); // right lapel
     R(ctx, x - 2, y - 19, 4, 1, COAT_DK); // collar break shadow
     R(ctx, x, y - 11, 1, 1, '#2f2416'); // coat button
     // visitor badge on the lapel + a pocket square
-    R(ctx, x - 5, y - 13, 2, 2, P.recruiter.badge);
+    R(ctx, x - 5, y - 13, 2, 2, P.visitor.badge);
     R(ctx, x - 5, y - 13, 2, 1, '#F0A55E'); // badge top highlight
     R(ctx, x + 3, y - 14, 2, 1, SHIRT_HI); // pocket square
   } else {
@@ -260,10 +260,10 @@ export function drawRecruiter(vp: Viewport, e: Entity, drinking = false, drinkT 
   R(ctx, x - 2, y - 21, 4, 2, P.skin.mid);
   R(ctx, x - 2, y - 20, 4, 1, P.skin.shadow); // soft neck shadow
 
-  drawRecruiterHead(vp, ctx, x, y - 31, back);
+  drawVisitorHead(vp, ctx, x, y - 31, back);
 
   if (drinking) {
-    // ---- phased drinking pose: cooler tray cup fills first, then the recruiter
+    // ---- phased drinking pose: cooler tray cup fills first, then the visitor
     // raises a full cup and sips it empty over discrete gulps ----
     const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
     const easeOut = (v: number) => 1 - (1 - v) * (1 - v);
@@ -278,7 +278,7 @@ export function drawRecruiter(vp: Viewport, e: Entity, drinking = false, drinkT 
     const bobA = !vp.reduced && phase === 'sip' ? Math.sin(gf * Math.PI) : 0;
 
     // During 'fill' the cup is still on the cooler tray (drawn by drawWaterCooler).
-    // The recruiter only lifts a cup once it is full, centered on the mouth so it
+    // The visitor only lifts a cup once it is full, centered on the mouth so it
     // covers the lips/chin and never the eyes.
     if (phase !== 'fill') {
       const cupFill = phase === 'sip' ? 1 - (gi + easeOut(gf)) / GULPS : 0;
@@ -287,7 +287,7 @@ export function drawRecruiter(vp: Viewport, e: Entity, drinking = false, drinkT 
       const cupTop = y - 20 - raise;
 
       // forearm/sleeve raising the cup to the lips
-      R(ctx, cupX + 4, cupTop + 6, 2, 4 + raise, P.recruiter.coatHi);
+      R(ctx, cupX + 4, cupTop + 6, 2, 4 + raise, P.visitor.coatHi);
 
       // cup body + shade/highlight + rim
       R(ctx, cupX, cupTop, 6, 7, '#FBF6EA');
@@ -317,9 +317,9 @@ export function drawRecruiter(vp: Viewport, e: Entity, drinking = false, drinkT 
   }
 }
 
-function drawRecruiterHead(vp: Viewport, ctx: CanvasRenderingContext2D, x: number, top: number, back: boolean): void {
-  const HAIR = P.recruiter.hair;
-  const HAIR_HI = P.recruiter.hairHi;
+function drawVisitorHead(vp: Viewport, ctx: CanvasRenderingContext2D, x: number, top: number, back: boolean): void {
+  const HAIR = P.visitor.hair;
+  const HAIR_HI = P.visitor.hairHi;
   const HAIR_DK = '#473722';
   // a slow blink, phase-offset from Sayed so the two never blink in sync
   const blink = !vp.reduced && (vp.t + 1.6) % 3.4 < 0.13;

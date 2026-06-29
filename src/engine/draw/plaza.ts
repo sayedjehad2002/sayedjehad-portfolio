@@ -2,10 +2,11 @@ import { palette as P } from '../../theme/palette';
 import { R, roundRectPath, softShadow, staticLayer, type StaticLayerCtx, type Viewport } from '../render';
 import type { Door } from '../systems/door';
 import type { Entity } from '../types';
-import { drawSayed, drawRecruiter, drawLostOne } from './sprites';
+import { drawSayed, drawVisitor, drawLostOne } from './sprites';
 import { drawDoor } from './door';
 import { drawBird } from './birds';
 import type { BirdsState } from '../systems/birds';
+import { drawSky } from '../env/sky';
 
 // Cozy, warm, Moonlighter-inspired cottage-studio courtyard where Sayed waits.
 const LAWNS = [
@@ -36,11 +37,24 @@ interface Leaf {
   y: number;
   sp: number; // fall speed
   sw: number; // sway phase
+  rot: number; // spin speed (rad/sec) for a tumbling read
+  rp: number; // spin phase offset
   c: string;
+  hi: string; // lit-edge tint
 }
 interface Clump {
   x: number;
   y: number;
+  big: boolean; // larger 5-blade tuft vs the compact 3-blade one
+  warm: boolean; // a drier, warmer-toned crown for tonal variety
+}
+interface Flower {
+  x: number;
+  y: number; // base of the stem (sits on the lawn)
+  c: string; // bloom colour (from P.flower)
+  big: boolean; // 4px vs 3px bloom head
+  style: number; // 0 round 5-petal, 1 cross, 2 clustered
+  phase: number; // per-flower sway phase so the field never moves in lockstep
 }
 
 function lcg(seed: number): () => number {
@@ -89,7 +103,65 @@ const clumps: Clump[] = (() => {
   const rnd = lcg(330217);
   for (const b of LAWNS) {
     for (let i = 0; i < 9; i++) {
-      out.push({ x: Math.round(b.x + 8 + rnd() * (b.w - 16)), y: Math.round(b.y + 12 + rnd() * (b.h - 22)) });
+      out.push({
+        x: Math.round(b.x + 8 + rnd() * (b.w - 16)),
+        y: Math.round(b.y + 12 + rnd() * (b.h - 22)),
+        big: rnd() < 0.4,
+        warm: rnd() < 0.3,
+      });
+    }
+  }
+  return out;
+})();
+// Deterministic flower beds: a small per-lawn scatter loop drops blooms ONLY inside
+// the lawn rects (with a safe inset) and clear of the on-lawn props, so flowers always
+// grow from grass, never from paving. Colours/sizes/petal-styles vary across P.flower.
+const FLOWER_COLS = [P.flower.red, P.flower.gold, P.flower.violet, P.flower.pink, P.flower.cream];
+// Round keep-out zones (cx, cy, r2) for props that stand on the lawns: lanterns + their
+// stone pads (x96/x374, y~300), the ground bird feeder (x110,y380) and the two trees
+// (x72/x408, trunk base ~y250..282). Flowers whose base falls inside any are skipped.
+const FLOWER_AVOID: ReadonlyArray<readonly [number, number, number]> = [
+  [99, 300, 22 * 22], // lantern L (post + stone footer)
+  [377, 300, 22 * 22], // lantern R
+  [110, 380, 20 * 20], // bird feeder dish + scattered seed
+  [72, 262, 26 * 26], // left tree trunk/canopy footprint
+  [408, 262, 26 * 26], // right tree trunk/canopy footprint
+];
+const flowers: Flower[] = (() => {
+  const out: Flower[] = [];
+  const rnd = lcg(60290413);
+  for (const b of LAWNS) {
+    // 6px inset on every side keeps blooms clear of the soft soil border; the stem base
+    // sits at >= y192 (well inside y184 lawn top) per the owner's bound.
+    const minX = b.x + 8;
+    const maxX = b.x + b.w - 8;
+    const minY = Math.max(b.y + 10, 192);
+    const maxY = b.y + b.h - 10;
+    // jittered grid so the scatter reads natural (not clumped, not a perfect lattice)
+    for (let gy = minY; gy <= maxY; gy += 54) {
+      for (let gx = minX; gx <= maxX; gx += 56) {
+        if (rnd() < 0.36) continue; // leave gaps so the lawn breathes
+        const x = Math.round(Math.max(minX, Math.min(maxX, gx + (rnd() * 22 - 11))));
+        const y = Math.round(Math.max(minY, Math.min(maxY, gy + (rnd() * 22 - 11))));
+        let blocked = false;
+        for (const [cx, cy, r2] of FLOWER_AVOID) {
+          const dx = x - cx;
+          const dy = y - cy;
+          if (dx * dx + dy * dy < r2) {
+            blocked = true;
+            break;
+          }
+        }
+        if (blocked) continue;
+        out.push({
+          x,
+          y,
+          c: FLOWER_COLS[Math.floor(rnd() * FLOWER_COLS.length)],
+          big: rnd() < 0.45,
+          style: Math.floor(rnd() * 3),
+          phase: rnd() * 6.283,
+        });
+      }
     }
   }
   return out;
@@ -99,16 +171,25 @@ const motes: Mote[] = (() => {
   return Array.from({ length: 12 }, () => ({ x: rnd() * 480, y: rnd() * 420, s: 4 + rnd() * 8, a: rnd() * 6 }));
 })();
 // A few slow-drifting fallen leaves over the courtyard (additive-free, simple sprites).
+// A touch more colour variety + a gentle per-leaf spin so they tumble, not just slide.
 const leaves: Leaf[] = (() => {
   const rnd = lcg(771904);
-  const tints = ['#C9663A', '#D8843C', P.lawn.dry, '#B5562E'];
-  return Array.from({ length: 5 }, () => ({
-    x: rnd() * 480,
-    y: rnd() * 432,
-    sp: 5 + rnd() * 6,
-    sw: rnd() * 6.28,
-    c: tints[Math.floor(rnd() * tints.length)],
-  }));
+  // warm autumn + green-gold mix; each leaf pairs a body tint with a brighter lit edge
+  const tints = ['#C9663A', '#D8843C', P.lawn.dry, '#B5562E', '#C2882E', P.flower.leaf];
+  const edges = ['#E8B26A', '#F0C77A', '#D6C27A', '#E0945A', '#E8C46E', '#9CC76A'];
+  return Array.from({ length: 6 }, () => {
+    const i = Math.floor(rnd() * tints.length);
+    return {
+      x: rnd() * 480,
+      y: rnd() * 432,
+      sp: 5 + rnd() * 6,
+      sw: rnd() * 6.28,
+      rot: 0.8 + rnd() * 1.4,
+      rp: rnd() * 6.28,
+      c: tints[i],
+      hi: edges[i],
+    };
+  });
 })();
 
 // PERF: the additive glow gradients (cottage windows, lanterns) never change shape
@@ -122,7 +203,7 @@ export function drawPlaza(vp: Viewport, world: { player: Entity; npc: Entity; lo
   const y0 = Math.floor(vp.cam.y) - 40;
   const x1 = vp.cam.x + vp.vw / vp.zoom + 40;
   const y1 = vp.cam.y + vp.vh / vp.zoom + 40;
-  R(ctx, x0, y0, x1 - x0, y1 - y0, P.plaza.stone2);
+  drawSky(vp, x0, y0, x1, y1); // paved-floor backdrop behind the cottage (completes the courtyard)
 
   staticLayer(vp, 'plaza:bg', 480, 432, buildPlazaBg); // baked: paving + welcome path + lawns
   drawGrass(vp, world.player);
@@ -143,23 +224,42 @@ export function drawPlaza(vp: Viewport, world: { player: Entity; npc: Entity; lo
   drawBench(ctx, 294, 272);
   drawLantern(vp, 96, 300);
   drawLantern(vp, 374, 300);
-  drawFlowers(ctx);
+  drawFlowers(vp);
 
   // depth pass: birds, the player and Sayed all y-sorted together so a bird
   // perched/feeding behind the player draws behind, and one in front draws over
   const ents: Array<{ y: number; draw: () => void }> = [
     { y: world.npc.y, draw: () => drawSayed(vp, world.npc) },
     { y: world.lostOne.y, draw: () => drawLostOne(vp, world.lostOne) },
-    { y: world.player.y, draw: () => drawRecruiter(vp, world.player) },
+    { y: world.player.y, draw: () => drawVisitor(vp, world.player) },
   ];
-  if (world.birds) for (const b of world.birds.birds) ents.push({ y: b.y, draw: () => drawBird(vp, b) });
+  // Birds fade out as the sun sets (gone at night) and when disabled in settings.
+  const env = vp.env;
+  const birdFade = !env ? 1 : env.birdsEnabled ? Math.max(0, Math.min(1, (env.sun.up - 0.08) / 0.18)) : 0;
+  if (world.birds && birdFade > 0.02) {
+    for (const b of world.birds.birds) {
+      ents.push({
+        y: b.y,
+        draw: () => {
+          if (birdFade < 0.99) {
+            ctx.save();
+            ctx.globalAlpha = birdFade;
+            drawBird(vp, b);
+            ctx.restore();
+          } else {
+            drawBird(vp, b);
+          }
+        },
+      });
+    }
+  }
   ents.sort((a, b) => a.y - b.y);
   for (const o of ents) o.draw();
 
-  if (!vp.reduced) {
-    drawGodRays(ctx);
+  if (!vp.reduced && (!env || env.particlesEnabled)) {
+    drawGodRays(vp); // sunbeams: fade out at night
     drawLeaves(vp);
-    drawMotes(vp);
+    drawMotes(vp); // warm dust by day → green-gold fireflies at night
   }
 }
 
@@ -274,13 +374,53 @@ function drawLawns(ctx: CanvasRenderingContext2D): void {
     R(ctx, b.x + 1, b.y + 1, b.w - 2, 1, P.lawn.tip);
     R(ctx, b.x + 1, b.y + 1, 1, b.h - 2, P.lawn.tip);
     ctx.restore();
-    R(ctx, b.x - 2, b.y - 2, b.w + 4, 2, '#7C5A3A');
-    R(ctx, b.x - 2, b.y + b.h, b.w + 4, 2, '#7C5A3A');
-    R(ctx, b.x - 2, b.y - 2, 2, b.h + 4, '#7C5A3A'); // left edge so grass meets stone softly
-    R(ctx, b.x + b.w, b.y - 2, 2, b.h + 4, '#7C5A3A'); // right edge
+    drawLawnEdge(ctx, b);
   }
   drawSpecks(ctx);
   drawClumps(ctx);
+}
+
+// Softens the hard lawn outline into a short dithered/graded soil edge: an outer warm
+// dirt band, a dithered transition course where dirt and lawn-shadow specks interleave,
+// plus a few deterministic pebbles + moss flecks so grass blends into stone (not a line).
+// All baked into the static plaza:bg layer, so it costs nothing per frame.
+function drawLawnEdge(ctx: CanvasRenderingContext2D, b: { x: number; y: number; w: number; h: number }): void {
+  const DIRT = P.ground.dirt;
+  const DIRT_SH = P.ground.dirtSh;
+  // outer 2px warm soil band (the base border, a touch warmer than the old flat brown)
+  R(ctx, b.x - 2, b.y - 2, b.w + 4, 2, DIRT_SH);
+  R(ctx, b.x - 2, b.y + b.h, b.w + 4, 2, DIRT_SH);
+  R(ctx, b.x - 2, b.y - 2, 2, b.h + 4, DIRT_SH);
+  R(ctx, b.x + b.w, b.y - 2, 2, b.h + 4, DIRT_SH);
+  // dithered 1px transition course just inside the turf: every other cell gets a dirt or
+  // dark-grass fleck so the boundary reads grainy instead of a crisp ruled line.
+  const rnd = lcg((b.x * 131 + b.y * 17) >>> 0);
+  for (let x = b.x; x < b.x + b.w; x += 2) {
+    if (rnd() < 0.55) R(ctx, x, b.y, 1, 1, rnd() < 0.5 ? DIRT : P.lawn.shadow); // top course
+    if (rnd() < 0.55) R(ctx, x + 1, b.y + b.h - 1, 1, 1, rnd() < 0.5 ? DIRT : P.lawn.shadow); // bottom course
+  }
+  for (let y = b.y; y < b.y + b.h; y += 2) {
+    if (rnd() < 0.55) R(ctx, b.x, y, 1, 1, rnd() < 0.5 ? DIRT : P.lawn.shadow); // left course
+    if (rnd() < 0.55) R(ctx, b.x + b.w - 1, y + 1, 1, 1, rnd() < 0.5 ? DIRT : P.lawn.shadow); // right course
+  }
+  // a few pebbles + moss flecks settled along the soil border for a lived-in edge
+  const pr = lcg((b.x * 53 + 9001) >>> 0);
+  for (let i = 0; i < 7; i++) {
+    const side = Math.floor(pr() * 4);
+    let px: number;
+    let py: number;
+    if (side === 0) { px = b.x + 2 + Math.floor(pr() * (b.w - 4)); py = b.y - 3; } // top edge
+    else if (side === 1) { px = b.x + 2 + Math.floor(pr() * (b.w - 4)); py = b.y + b.h + 1; } // bottom
+    else if (side === 2) { px = b.x - 3; py = b.y + 4 + Math.floor(pr() * (b.h - 8)); } // left
+    else { px = b.x + b.w + 1; py = b.y + 4 + Math.floor(pr() * (b.h - 8)); } // right
+    if (pr() < 0.5) {
+      R(ctx, px, py, 3, 2, P.ground.pebble); // pebble
+      R(ctx, px, py, 2, 1, P.ground.pebbleHi); // its top catch-light
+    } else {
+      R(ctx, px, py, 2, 1, P.plaza.moss); // moss fleck on the stone
+      R(ctx, px + 1, py + 1, 1, 1, P.plaza.moss);
+    }
+  }
 }
 
 // Sparse fixed scatter of tufts/clover/pebbles/leaf flecks across the lawns.
@@ -312,14 +452,28 @@ function drawSpecks(ctx: CanvasRenderingContext2D): void {
 }
 
 // Small Moonlighter-style grass clumps (denser rounded tufts) for a lush lawn.
+// Size + crown tone vary per clump so the turf reads hand-planted, not stamped.
 function drawClumps(ctx: CanvasRenderingContext2D): void {
   for (const c of clumps) {
-    R(ctx, c.x - 3, c.y - 1, 7, 3, P.lawn.shadow); // dark mound base
-    R(ctx, c.x - 2, c.y - 2, 5, 2, P.lawn.base); // mid
-    R(ctx, c.x - 1, c.y - 3, 3, 1, P.lawn.hi); // lit crown
-    R(ctx, c.x - 2, c.y - 4, 1, 2, P.lawn.tip); // upright blade tips
-    R(ctx, c.x, c.y - 5, 1, 3, P.lawn.tip);
-    R(ctx, c.x + 2, c.y - 4, 1, 2, P.lawn.tip);
+    const tip = c.warm ? P.lawn.dry : P.lawn.tip; // a few drier, warmer-crowned tufts
+    if (c.big) {
+      // larger 5-blade tuft
+      R(ctx, c.x - 4, c.y - 1, 9, 3, P.lawn.shadow); // dark mound base
+      R(ctx, c.x - 3, c.y - 2, 7, 2, P.lawn.base); // mid
+      R(ctx, c.x - 2, c.y - 3, 5, 1, P.lawn.hi); // lit crown
+      R(ctx, c.x - 3, c.y - 5, 1, 3, tip); // upright blade tips
+      R(ctx, c.x - 1, c.y - 6, 1, 4, tip);
+      R(ctx, c.x + 1, c.y - 6, 1, 4, tip);
+      R(ctx, c.x + 3, c.y - 5, 1, 3, tip);
+    } else {
+      // compact 3-blade tuft
+      R(ctx, c.x - 3, c.y - 1, 7, 3, P.lawn.shadow); // dark mound base
+      R(ctx, c.x - 2, c.y - 2, 5, 2, P.lawn.base); // mid
+      R(ctx, c.x - 1, c.y - 3, 3, 1, P.lawn.hi); // lit crown
+      R(ctx, c.x - 2, c.y - 4, 1, 2, tip); // upright blade tips
+      R(ctx, c.x, c.y - 5, 1, 3, tip);
+      R(ctx, c.x + 2, c.y - 4, 1, 2, tip);
+    }
   }
 }
 
@@ -340,8 +494,13 @@ function drawGrass(vp: Viewport, player: Entity): void {
   const lead = [new Path2D(), new Path2D(), new Path2D(), new Path2D()];
   const tips = new Path2D();
   const tipsLead = new Path2D();
+  // Global wind drives sway depth (gusts) + a steady downwind lean, so the whole
+  // lawn breathes together. Reduced-motion still freezes everything (windLean too).
+  const wind = vp.env?.wind;
+  const windAmp = wind ? 0.7 + wind.strength * 0.95 : 1;
+  const windLean = reduced || !wind ? 0 : wind.x * wind.strength * 2.4;
   for (const bl of blades) {
-    let sway = reduced ? 0 : Math.sin(t * 1.2 + bl.x * 0.18) * 2.4 + Math.sin(t * 2.1 + bl.x * 0.31) * 0.7;
+    let sway = reduced ? 0 : (Math.sin(t * 1.2 + bl.x * 0.18) * 2.4 + Math.sin(t * 2.1 + bl.x * 0.31) * 0.7) * windAmp + windLean;
     // rustle: blades bend away from the player and wobble as they walk through
     if (!reduced) {
       const dx = bl.x - px;
@@ -632,7 +791,9 @@ function drawCottageWindow(vp: Viewport, x: number, y: number): void {
   R(ctx, x - 4, y + 38, 48, 1, P.wood.dark); // 1px sill drop shadow
   ctx.restore();
   if (!vp.reduced) {
-    const a = 0.3 + 0.06 * Math.sin(vp.t * 1.4 + x);
+    // Window interior glow brightens at night too (the cottage looks "lived-in").
+    const boost = vp.env?.lightBoost ?? 0;
+    const a = (0.3 + 0.06 * Math.sin(vp.t * 1.4 + x)) * (1 + boost * 0.9);
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = a;
@@ -887,77 +1048,6 @@ function drawFeeder(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   R(ctx, x + 5, y + 1, 2, 2, '#D8B070');
 }
 
-// A cozy wooden signboard on the left lawn that introduces Sayed (the About beat).
-// (x, y) is the base centre; the panel stands above it. Drawn with the lawn props.
-// NOTE: currently unused — the plaza About board was removed in favour of the single
-// in-studio About station; kept for reference (tree-shaken out of the production bundle).
-function drawAboutBoard(ctx: CanvasRenderingContext2D, x: number, y: number): void {
-  const LT = P.wood.light;
-  const MID = P.wood.mid;
-  const DK = P.wood.dark;
-  const HI = '#D8AE72';
-  const EDGE = '#3E281A';
-  const indigo = P.accent.indigo;
-  const parch = '#F2E6C8';
-  const parchSh = '#E0CFA6';
-  const ink = '#7A5230';
-  // grounding shadow
-  softShadow(ctx, x, y + 6, 22, P.shadowSoft);
-  softShadow(ctx, x, y + 6, 14, P.shadowSoft);
-  // two posts rising from the base to the panel: richer turned-wood read with a
-  // lit-left rim, a darker shadow edge and a small grain stroke each
-  for (const postx of [x - 9, x + 5]) {
-    R(ctx, postx, y - 2, 4, 10, DK);
-    R(ctx, postx, y - 2, 1, 10, '#7A5230'); // lit-left rim
-    R(ctx, postx + 1, y - 2, 1, 10, MID); // mid face
-    R(ctx, postx + 3, y - 2, 1, 10, EDGE); // shadow-right edge
-    R(ctx, postx + 1, y + 2, 1, 4, '#3A2616'); // faint grain stroke
-  }
-  // panel frame + inner board (lit top-left, shaded right) with crisper double bevels
-  const px = x - 17;
-  const py = y - 30;
-  const pw = 34;
-  const ph = 26;
-  R(ctx, px, py, pw, ph, DK); // outer frame
-  R(ctx, px, py, pw, 1, '#7A5230'); // lit outer top edge
-  R(ctx, px, py, 1, ph, '#7A5230'); // lit outer left edge
-  R(ctx, px + pw - 1, py, 1, ph, EDGE); // shadow outer right edge
-  R(ctx, px, py + ph - 1, pw, 1, EDGE); // shadow outer bottom edge
-  R(ctx, px + 2, py + 2, pw - 4, ph - 4, MID); // frame inner face
-  R(ctx, px + 2, py + 2, pw - 4, 1, HI); // crisp top bevel highlight
-  R(ctx, px + 2, py + 2, 1, ph - 4, LT); // crisp left bevel highlight
-  R(ctx, px + pw - 3, py + 2, 1, ph - 4, EDGE); // crisp right bevel shadow
-  R(ctx, px + 2, py + ph - 3, pw - 4, 1, EDGE); // crisp bottom bevel shadow
-  // pinned parchment note with a soft inset shadow under the frame lip
-  R(ctx, px + 5, py + 5, pw - 10, ph - 10, parch);
-  R(ctx, px + 5, py + 5, pw - 10, 1, '#FBF3DE'); // lit parchment top
-  R(ctx, px + 5, py + 5, 1, ph - 10, '#FBF3DE'); // lit parchment left
-  R(ctx, px + pw - 6, py + 6, 1, ph - 11, parchSh); // shaded parchment right
-  R(ctx, px + 5, py + ph - 6, pw - 10, 1, parchSh); // shaded parchment bottom
-  // four little corner pins fixing the note to the board
-  R(ctx, px + 6, py + 6, 1, 1, '#8A6A3A');
-  R(ctx, px + pw - 7, py + 6, 1, 1, '#8A6A3A');
-  R(ctx, px + 6, py + ph - 7, 1, 1, '#8A6A3A');
-  R(ctx, px + pw - 7, py + ph - 7, 1, 1, '#8A6A3A');
-  // indigo header band with a lit top edge (clearly the "about me" banner)
-  R(ctx, px + 5, py + 5, pw - 10, 5, indigo);
-  R(ctx, px + 5, py + 5, pw - 10, 1, '#7A6AA8'); // lit band cap
-  R(ctx, px + 5, py + 9, pw - 10, 1, '#2E2452'); // band base shadow
-  // a tiny portrait-style glyph (head + rounded shoulders) reading as a person
-  R(ctx, px + 8, py + 6, 3, 2, '#F0EAF8'); // head
-  R(ctx, px + 9, py + 6, 1, 1, '#E8E0F0'); // head highlight
-  R(ctx, px + 7, py + 8, 5, 1, '#E8E0F0'); // shoulders
-  // a few abstract text lines (varied length, like a short bio)
-  R(ctx, px + 7, py + 12, pw - 16, 1, ink);
-  R(ctx, px + 7, py + 15, pw - 19, 1, ink);
-  R(ctx, px + 7, py + 18, pw - 14, 1, ink);
-  R(ctx, px + 7, py + 21, pw - 22, 1, parchSh); // a faint trailing line
-  // peaked cap on top of the frame with a crisper lit ridge
-  R(ctx, px - 1, py - 2, pw + 2, 2, DK);
-  R(ctx, px + 1, py - 4, pw - 2, 2, MID);
-  R(ctx, px + 1, py - 4, pw - 2, 1, HI);
-  R(ctx, px - 1, py - 1, pw + 2, 1, EDGE); // cap underside shadow onto the frame
-}
 
 function drawLantern(vp: Viewport, x: number, y: number): void {
   const ctx = vp.ctx;
@@ -1006,7 +1096,10 @@ function drawLantern(vp: Viewport, x: number, y: number): void {
     g.addColorStop(1, 'rgba(255,213,130,0)');
     glowCache.set('lamp' + x, g);
   }
-  ctx.globalAlpha = 0.42 * flick;
+  // Lanterns "turn on" as the world darkens: scale the halo with env.lightBoost so
+  // they read as warm pools of light against the cool dusk/night grade.
+  const boost = vp.env?.lightBoost ?? 0;
+  ctx.globalAlpha = 0.42 * flick * (1 + boost * 1.25);
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(x + 3, y - 26, 22, 0, Math.PI * 2);
@@ -1022,56 +1115,80 @@ function drawLantern(vp: Viewport, x: number, y: number): void {
   R(ctx, x + 2, y - 28, 2, 2, '#FFF6DC'); // hot bulb core
 }
 
-function drawFlowers(ctx: CanvasRenderingContext2D): void {
-  const violet = P.accent.indigo; // softer, palette-harmonised bloom (replaces the harsh purple "sparks")
-  const spots: Array<[number, number, string]> = [
-    [60, 178, '#D85A30'], [110, 176, P.accent.golden], [170, 178, violet],
-    [300, 178, P.accent.golden], [360, 176, '#D85A30'], [420, 178, violet],
-    [30, 300, '#D85A30'], [130, 360, P.accent.golden], [350, 320, violet], [450, 300, P.accent.golden],
-  ];
-  for (let i = 0; i < spots.length; i++) {
-    const [x, y, c] = spots[i];
-    R(ctx, x + 1, y, 1, 5, '#4C7E37'); // green stem
-    R(ctx, x - 1, y + 2, 2, 1, '#5E9A46'); // left leaf
-    R(ctx, x + 2, y + 3, 2, 1, '#5E9A46'); // right leaf
-    // every other bloom is a fuller 5-petal flower with a tiny bud on a curved stem;
-    // the rest stay as the original compact cluster
-    if (i % 2 === 0) {
-      R(ctx, x, y - 3, 3, 3, c); // centre mass
-      R(ctx, x + 1, y - 4, 1, 1, c); // top petal
-      R(ctx, x - 1, y - 2, 1, 1, c); // left petal
-      R(ctx, x + 3, y - 2, 1, 1, c); // right petal
-      R(ctx, x, y, 1, 1, c); // lower-left petal
-      R(ctx, x + 2, y, 1, 1, c); // lower-right petal
-      R(ctx, x + 1, y - 2, 1, 1, '#FFE6A8'); // bright center
-      // a curved side-stem ending in a small bud
-      R(ctx, x + 2, y + 1, 1, 1, '#4C7E37');
-      R(ctx, x + 3, y, 1, 1, '#4C7E37');
-      R(ctx, x + 4, y - 1, 1, 1, c); // the bud
+function drawFlowers(vp: Viewport): void {
+  const ctx = vp.ctx;
+  const t = vp.t;
+  const reduced = vp.reduced;
+  // Bloom-head sway: a steady downwind lean (from env.wind) + a small per-flower bob.
+  // Only the HEAD shifts; the stem base stays rooted. Fully static when reduced-motion.
+  const wind = vp.env?.wind;
+  const windLean = reduced || !wind ? 0 : wind.x * wind.strength * 1.3;
+  const stem = P.flower.stem;
+  const leaf = P.flower.leaf;
+  const core = P.flower.core;
+  for (const f of flowers) {
+    const x = f.x;
+    const y = f.y;
+    // tiny soil/grass tuft so the bloom visibly grows from the ground
+    R(ctx, x - 1, y + 4, 4, 1, P.ground.dirt); // soil scuff at the base
+    R(ctx, x, y + 5, 2, 1, P.ground.dirtSh); // its shadow line
+    R(ctx, x - 1, y + 3, 1, 2, P.lawn.shadow); // a short grass blade left of the stem
+    R(ctx, x + 2, y + 2, 1, 3, P.lawn.tip); // a brighter grass blade right of the stem
+    // short, clearly rooted stem + a pair of leaves
+    R(ctx, x + 1, y, 1, 5, stem);
+    R(ctx, x - 1, y + 2, 2, 1, leaf); // left leaf
+    R(ctx, x + 2, y + 3, 2, 1, leaf); // right leaf
+    // head offset: a small integer sway so the bloom nods in the breeze
+    const dx = reduced ? 0 : Math.round(Math.sin(t * 1.5 + f.phase) * 0.9 + windLean);
+    const hx = x + dx;
+    const c = f.c;
+    if (f.style === 0) {
+      // round 5-petal bloom (4px head when big)
+      R(ctx, hx, y - 3, 3, 3, c); // centre mass
+      R(ctx, hx + 1, y - 4, 1, 1, c); // top petal
+      R(ctx, hx - 1, y - 2, 1, 1, c); // left petal
+      R(ctx, hx + 3, y - 2, 1, 1, c); // right petal
+      if (f.big) {
+        R(ctx, hx, y, 1, 1, c); // fuller lower petals
+        R(ctx, hx + 2, y, 1, 1, c);
+      }
+      R(ctx, hx + 1, y - 2, 1, 1, core); // bright centre
+    } else if (f.style === 1) {
+      // cross / daisy bloom: petals on the four sides around a bright core
+      R(ctx, hx + 1, y - 4, 1, 2, c); // top
+      R(ctx, hx + 1, y - 1, 1, 1, c); // bottom
+      R(ctx, hx - 1, y - 3, 1, 1, c); // left
+      R(ctx, hx + 3, y - 3, 1, 1, c); // right
+      if (f.big) {
+        R(ctx, hx, y - 3, 1, 1, c);
+        R(ctx, hx + 2, y - 3, 1, 1, c);
+      }
+      R(ctx, hx + 1, y - 3, 1, 1, core); // bright centre
     } else {
-      R(ctx, x, y - 3, 3, 3, c); // petal cluster
-      R(ctx, x - 1, y - 2, 1, 1, c); // left petal
-      R(ctx, x + 3, y - 2, 1, 1, c); // right petal
-      R(ctx, x + 1, y - 2, 1, 1, '#FFE6A8'); // bright center
+      // clustered bloom: a denser overlapping petal mass + a tiny side bud
+      R(ctx, hx, y - 3, 3, 3, c); // petal cluster
+      R(ctx, hx - 1, y - 2, 1, 1, c); // left petal
+      R(ctx, hx + 3, y - 2, 1, 1, c); // right petal
+      if (f.big) R(ctx, hx, y - 4, 2, 1, c); // taller crown for the bigger ones
+      R(ctx, hx + 1, y - 2, 1, 1, core); // bright centre
+      R(ctx, x + 3, y, 1, 1, stem); // a curved side-stem ...
+      R(ctx, x + 4, y - 1, 1, 1, c); // ... ending in a small bud (rooted, no sway)
     }
-  }
-  // a couple of denser overlapping clusters tucked beside existing blooms for richness
-  const extras: Array<[number, number, string]> = [
-    [113, 179, '#D85A30'], [357, 179, P.accent.golden], [33, 303, P.accent.golden],
-  ];
-  for (const [x, y, c] of extras) {
-    R(ctx, x, y, 1, 4, '#4C7E37'); // short stem
-    R(ctx, x - 1, y - 2, 2, 2, c); // overlapping petal mass
-    R(ctx, x, y - 3, 2, 2, c);
-    R(ctx, x, y - 2, 1, 1, '#FFE6A8'); // center
   }
 }
 
-function drawGodRays(ctx: CanvasRenderingContext2D): void {
+function drawGodRays(vp: Viewport): void {
+  const ctx = vp.ctx;
+  // Sunbeams only make sense in daylight — fade them with the sun's altitude.
+  const day = vp.env ? Math.max(0, Math.min(1, vp.env.sun.up * 1.4)) : 1;
+  if (day < 0.02) return;
   ctx.save();
+  // beams lean with the light direction (subtle horizontal skew, straight at noon)
+  const lean = vp.env ? (vp.env.sun.x - 0.5) * 0.5 : 0;
+  ctx.transform(1, 0, lean, 1, 0, 0);
   ctx.globalCompositeOperation = 'lighter';
   ctx.fillStyle = P.glowKit.window;
-  ctx.globalAlpha = 0.06;
+  ctx.globalAlpha = 0.06 * day;
   ctx.beginPath();
   ctx.moveTo(90, 0);
   ctx.lineTo(150, 0);
@@ -1087,7 +1204,7 @@ function drawGodRays(ctx: CanvasRenderingContext2D): void {
   ctx.closePath();
   ctx.fill();
   // a thin brighter core down each shaft for a crisper sunbeam
-  ctx.globalAlpha = 0.05;
+  ctx.globalAlpha = 0.05 * day;
   ctx.fillStyle = P.lamp.glow;
   ctx.beginPath();
   ctx.moveTo(112, 0);
@@ -1108,17 +1225,27 @@ function drawGodRays(ctx: CanvasRenderingContext2D): void {
 
 function drawMotes(vp: Viewport): void {
   const ctx = vp.ctx;
+  const env = vp.env;
+  // Reuse the same pooled motes, but recolour by time: warm floating dust by day,
+  // soft green-gold fireflies that twinkle harder at night.
+  const night = env ? Math.max(0, Math.min(1, 1 - env.sun.up * 2.2)) : 0;
+  const firefly = night > 0.5;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = firefly ? '#BFE886' : P.glowKit.lamp;
+  const mw = env?.wind;
+  const moteWind = mw ? mw.x * mw.strength * 0.25 : 0;
+  const base = firefly ? 0.2 : 0.16;
+  const amp = firefly ? 0.28 : 0.12;
+  const sp = firefly ? 2.6 : 1.4;
   for (const m of motes) {
     m.y -= m.s * 0.016;
-    m.x += Math.sin((m.y + m.a * 30) / 40) * 0.12;
+    m.x += Math.sin((m.y + m.a * 30) / 40) * 0.12 + moteWind;
     if (m.y < vp.cam.y - 4) {
       m.y = vp.cam.y + vp.vh / vp.zoom + 4;
       m.x = vp.cam.x + Math.random() * (vp.vw / vp.zoom);
     }
-    ctx.globalAlpha = 0.16 + 0.12 * Math.sin(m.a + vp.t * 1.4);
-    ctx.fillStyle = P.glowKit.lamp;
+    ctx.globalAlpha = base + amp * (0.5 + 0.5 * Math.sin(m.a + vp.t * sp));
     ctx.fillRect(Math.round(m.x), Math.round(m.y), 1, 1);
   }
   ctx.restore();
@@ -1130,24 +1257,39 @@ function drawLeaves(vp: Viewport): void {
   ctx.save();
   ctx.globalAlpha = 0.7;
   const span = vp.vh / vp.zoom;
+  const lw = vp.env?.wind;
+  const leafWind = lw ? lw.x * lw.strength * 6 : 0;
   for (const lf of leaves) {
     lf.y += lf.sp * 0.012;
-    const drift = Math.sin(vp.t * 0.7 + lf.sw) * 6;
+    const drift = Math.sin(vp.t * 0.7 + lf.sw) * 6 + leafWind;
     if (lf.y > vp.cam.y + span + 6) {
       lf.y = vp.cam.y - 6;
       lf.x = vp.cam.x + Math.random() * (vp.vw / vp.zoom);
     }
     const px = Math.round(lf.x + drift);
     const py = Math.round(lf.y);
-    // tiny 2x2 leaf with a 1px lit edge, orientation flips with sway for a tumble feel
-    if (drift > 0) {
+    // tiny 2-px leaf that tumbles: a 4-step spin cycles which two cells the body fills
+    // and where the lit edge catches, so each leaf reads as turning end-over-end.
+    const spin = ((Math.sin(vp.t * lf.rot + lf.rp) * 2 + 2) | 0) & 3; // 0..3
+    if (spin === 0) {
+      // flat: a 2px horizontal sliver
       R(ctx, px, py, 2, 1, lf.c);
-      R(ctx, px, py + 1, 1, 1, lf.c);
-    } else {
+      R(ctx, px, py, 1, 1, lf.hi);
+    } else if (spin === 1) {
+      // tilted down-right
       R(ctx, px, py, 2, 1, lf.c);
       R(ctx, px + 1, py + 1, 1, 1, lf.c);
+      R(ctx, px, py, 1, 1, lf.hi);
+    } else if (spin === 2) {
+      // edge-on: a 2px vertical sliver
+      R(ctx, px, py, 1, 2, lf.c);
+      R(ctx, px, py, 1, 1, lf.hi);
+    } else {
+      // tilted down-left
+      R(ctx, px, py, 2, 1, lf.c);
+      R(ctx, px, py + 1, 1, 1, lf.c);
+      R(ctx, px + 1, py, 1, 1, lf.hi);
     }
-    R(ctx, px, py, 1, 1, '#E8B26A');
   }
   ctx.restore();
 }

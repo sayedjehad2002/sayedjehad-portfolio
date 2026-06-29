@@ -65,7 +65,7 @@ export function ModalShell({ onClose, labelledBy, children, width = 'max-w-md' }
         <button
           onClick={onClose}
           aria-label="Close"
-          className="ui-focus-panel absolute right-3 top-3 z-20 grid h-11 w-11 place-items-center rounded-[10px] border border-line bg-sunken text-ink-soft outline-none transition-colors hover:border-teal hover:text-ink"
+          className="ui-focus-panel absolute right-3 top-3 z-20 grid h-11 w-11 place-items-center rounded-[10px] border border-line bg-sunken text-ink-soft outline-none transition-colors hover:border-teal hover:bg-white hover:text-ink"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" />
@@ -75,7 +75,12 @@ export function ModalShell({ onClose, labelledBy, children, width = 'max-w-md' }
             scrolls inside it so headings + bottom CTAs stay reachable on short
             (landscape) phones. The close button is pinned to the box, not the
             scroller, so it never scrolls away. */}
-        <div className="overflow-y-auto overscroll-contain p-6">{children}</div>
+        <div
+          style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(45,212,191,0.55) transparent' }}
+          className="overflow-y-auto overscroll-contain p-6 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-teal/55 hover:[&::-webkit-scrollbar-thumb]:bg-teal/70 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-2"
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

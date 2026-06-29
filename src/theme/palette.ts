@@ -55,7 +55,7 @@ export const palette = {
     lanyard: '#16685F',
     badge: '#FFCF6E',
   },
-  recruiter: { coat: '#7A6A4A', coatHi: '#8E7C58', coatSh: '#5E5038', hair: '#5A4631', hairHi: '#6E5640', badge: '#E0843C' },
+  visitor: { coat: '#7A6A4A', coatHi: '#8E7C58', coatSh: '#5E5038', hair: '#5A4631', hairHi: '#6E5640', badge: '#E0843C' },
 
   // --- shared visual-system tokens (unified world upgrade) ---
   outline: 'rgba(42,28,14,0.5)', // consistent soft prop edge

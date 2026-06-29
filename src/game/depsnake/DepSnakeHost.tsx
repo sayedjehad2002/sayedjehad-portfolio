@@ -215,8 +215,8 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
           ))}
 
         {phase === 'menu' && (
-          <div className="absolute inset-0 grid place-items-center bg-[#070a16]/85 p-4 backdrop-blur-[2px]">
-            <div className="w-full max-w-md text-center">
+          <div className="absolute inset-0 flex flex-col items-center overflow-y-auto bg-[#070a16]/85 p-4 backdrop-blur-[2px]">
+            <div className="my-auto w-full max-w-md text-center">
               <span className="font-pixel text-[9px] uppercase tracking-[0.34em] text-[#7A5BA6]">Dependency Dash</span>
               <h2 className="mt-2 font-pixel text-[clamp(18px,4.6vw,26px)] leading-[1.4] text-[#FFE08A] [text-shadow:0_3px_0_#1c130a]">npm install --survive</h2>
               <p className="mx-auto mt-2 max-w-xs font-sans text-[12.5px] leading-snug text-[#9fb0c0]">Eat the packages, grow your import chain, and never import yourself.</p>
@@ -263,8 +263,8 @@ export function DepSnakeHost({ onExit, reduced, coarse, announce, announceAlert 
         )}
 
         {phase === 'gameover' && result && (
-          <div className="absolute inset-0 grid place-items-center bg-[#070a16]/95 p-4 backdrop-blur-[3px]">
-            <div className="w-full max-w-sm text-center">
+          <div className="absolute inset-0 flex flex-col items-center overflow-y-auto bg-[#070a16]/95 p-4 backdrop-blur-[3px]">
+            <div className="my-auto w-full max-w-sm text-center">
               {result.cause && (
                 <span className="font-pixel text-[10px] uppercase tracking-[0.12em]" style={{ color: CAUSE[result.cause].tone, textShadow: '0 0 10px ' + CAUSE[result.cause].tone + '55' }}>
                   {CAUSE[result.cause].title}

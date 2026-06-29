@@ -73,9 +73,12 @@ canvas {
       background-color 0.15s ease,
       transform 0.12s ease;
   }
-  .ui-chip-btn:hover {
-    border-color: rgba(31, 168, 156, 0.7);
-    background: rgba(24, 19, 12, 0.74);
+  /* hover only where it is supported, so the chip does not stay highlighted after a tap on touch */
+  @media (hover: hover) {
+    .ui-chip-btn:hover {
+      border-color: rgba(31, 168, 156, 0.7);
+      background: rgba(24, 19, 12, 0.74);
+    }
   }
   .ui-chip-btn:active {
     transform: translateY(1px);
@@ -118,6 +121,13 @@ canvas {
 .anim-slideup { animation: slideUp 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .caret { animation: blink 1s step-end infinite; }
 .pulse-ring { animation: pulseRing 2s ease-out infinite; }
+
+/* gentle teal breathing glow on the title's accent word (killed by reduced-motion) */
+@keyframes titleSheen {
+  0%, 100% { text-shadow: 0 0 0 rgba(45, 212, 191, 0); }
+  50% { text-shadow: 0 0 16px rgba(45, 212, 191, 0.5); }
+}
+.title-sheen { animation: titleSheen 4.5s ease-in-out infinite; }
 
 /* ---- retro CRT arcade screen (scanlines + vignette + faint grid + sub-strobe flicker) ---- */
 .crt-screen {

@@ -85,8 +85,8 @@ export function DialogueBar() {
         aria-label="Dialogue with Sayed Jehad"
         className="anim-slideup w-full max-w-2xl rounded-panel border-2 border-line bg-panel p-3 shadow-panel"
       >
-        <button onClick={advance} aria-label="Reveal or continue" aria-keyshortcuts="Space Enter" className="flex w-full items-stretch gap-3 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel">
-          <div className="h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl border-2 border-teal bg-white shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)]">
+        <button onClick={advance} aria-label="Reveal or continue" aria-keyshortcuts="Space Enter" className="flex w-full cursor-pointer items-stretch gap-3 rounded-xl text-left outline-none transition-colors hover:bg-teal/5 focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-panel">
+          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 border-teal bg-white shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)] sm:h-[88px] sm:w-[88px]">
             <img src={photo} alt={`Photo of ${CHARACTER.name}`} className="h-full w-full rounded-[10px] object-cover" />
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
@@ -107,7 +107,7 @@ export function DialogueBar() {
             </p>
           </div>
         </button>
-        <div className="mt-2 flex items-center justify-between gap-2 pl-[100px]">
+        <div className="mt-2 flex items-center justify-between gap-2 pl-[76px] sm:pl-[100px]">
           <span className="font-sans text-[12px] text-ink-faint">
             <kbd className="rounded border border-line bg-sunken px-1.5 py-0.5 font-pixel text-[10px] text-ink-soft">Space</kbd>{' '}
             {typing ? 'reveal' : 'continue'}

@@ -196,8 +196,8 @@ export function AimGameHost({ onExit, reduced, coarse, announce, announceAlert }
         )}
 
         {phase === 'menu' && (
-          <div className="absolute inset-0 grid place-items-center bg-[#070a0f]/82 p-4 backdrop-blur-[2px]">
-            <div className="w-full max-w-md text-center">
+          <div className="absolute inset-0 flex flex-col items-center overflow-y-auto bg-[#070a0f]/82 p-4 backdrop-blur-[2px]">
+            <div className="my-auto w-full max-w-md text-center">
               <span className="font-pixel text-[9px] uppercase tracking-[0.34em] text-[#5FE0D0]">Gridshot</span>
               <h2 className="mt-2 font-pixel text-[clamp(20px,5vw,30px)] leading-[1.4] text-[#FFE08A] [text-shadow:0_3px_0_#1c130a]">Sayed&apos;s Arcade</h2>
               <p className="mx-auto mt-2 max-w-xs font-sans text-[12.5px] leading-snug text-[#9fb0c0]">
@@ -223,9 +223,15 @@ export function AimGameHost({ onExit, reduced, coarse, announce, announceAlert }
                 ))}
               </div>
               <div className="mt-4 flex items-center justify-center gap-3 font-sans text-[11px] text-[#6c7d8f]">
-                <span>Mouse or tap to aim and fire</span>
-                <span aria-hidden="true">/</span>
-                <span>Arrows + Space</span>
+                {coarse ? (
+                  <span>Tap and drag to aim, tap to fire</span>
+                ) : (
+                  <>
+                    <span>Mouse or tap to aim and fire</span>
+                    <span aria-hidden="true">/</span>
+                    <span>Arrows + Space</span>
+                  </>
+                )}
               </div>
               <button
                 onClick={onExit}
@@ -239,8 +245,8 @@ export function AimGameHost({ onExit, reduced, coarse, announce, announceAlert }
         )}
 
         {phase === 'gameover' && result && (
-          <div className="absolute inset-0 grid place-items-center bg-[#070a0f]/95 p-4 backdrop-blur-[3px]">
-            <div className="w-full max-w-sm text-center">
+          <div className="absolute inset-0 flex flex-col items-center overflow-y-auto bg-[#070a0f]/95 p-4 backdrop-blur-[3px]">
+            <div className="my-auto w-full max-w-sm text-center">
               {result.newBest ? (
                 <span className="font-pixel text-[11px] uppercase tracking-[0.2em] text-[#FFB454] [text-shadow:0_0_12px_rgba(255,180,84,0.6)]">★ New best ★</span>
               ) : (

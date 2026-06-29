@@ -177,10 +177,16 @@ export function ArcadeModal() {
       </div>
 
       <CrtFrame reduced={reduced} crtOff={crtOff} flicker={screen !== 'game'} onToggleCrt={toggleCrt}>
+        {/* start + select self-fade on mount via their own root anim-fade; the game host
+            gets a soft fade here without changing its absolute offset parent (the wrapper is
+            absolute inset-0 = the same box as crt-screen, and is non-focusable so it never
+            affects the Tab trap, the focus-rehome query, or Esc routing) */}
         {screen === 'start' && <StartScreen onStart={goSelect} onExit={close} hiScore={allGamesBest()} reduced={reduced} />}
         {screen === 'select' && <GameSelect games={GAMES} onPick={pickGame} onBack={goStart} hiScore={allGamesBest()} />}
         {screen === 'game' && Host && (
-          <Host key={activeGameId} onExit={backToSelect} reduced={reduced} coarse={coarse} announce={announce} announceAlert={announceAlert} />
+          <div key={activeGameId} className="anim-fade absolute inset-0 z-10">
+            <Host onExit={backToSelect} reduced={reduced} coarse={coarse} announce={announce} announceAlert={announceAlert} />
+          </div>
         )}
       </CrtFrame>
     </div>

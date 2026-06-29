@@ -2,7 +2,7 @@ import { ABOUT, CONTACT } from '../data/about';
 import { CHARACTER } from '../data/character';
 
 // "About Me" + Contact: the journey-first story behind the resume, then a clear
-// way for a recruiter to act. Mirrors the warm cream + teal-deep panel style.
+// way for a visitor to act. Mirrors the warm cream + teal-deep panel style.
 export function AboutPanel() {
   const base = import.meta.env.BASE_URL;
   const photo = base + CHARACTER.photo;

@@ -1,6 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  // Only apply `hover:` utilities on devices that actually support hover. Without
+  // this, `:hover` "sticks" after a tap on touch screens (the lifted role card /
+  // tinted dialogue stayed highlighted until you tapped elsewhere). Desktop is
+  // unaffected; touch devices simply skip the hover state.
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     extend: {
       colors: {

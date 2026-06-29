@@ -51,7 +51,7 @@ export function ProjectModal({ id }: { id: string }) {
       <p className="my-4 font-sans text-[15px] leading-relaxed text-ink-soft">{p.desc}</p>
       <div className="mb-5 flex flex-wrap gap-2">
         {p.stack.map((s) => (
-          <span key={s} className="rounded-md border border-line bg-sunken px-2.5 py-1 text-[12px] font-medium text-ink-soft">
+          <span key={s} className="rounded-md border border-line bg-sunken px-2.5 py-1 text-[12px] font-medium text-ink-soft transition-colors duration-150 hover:border-teal/50 hover:bg-white hover:text-ink">
             {s}
           </span>
         ))}

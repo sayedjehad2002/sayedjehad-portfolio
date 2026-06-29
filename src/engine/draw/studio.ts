@@ -1,7 +1,7 @@
 import { palette as P } from '../../theme/palette';
 import { R, softShadow, pix, staticLayer, type StaticLayerCtx, type Viewport } from '../render';
 import type { Entity } from '../types';
-import { drawRecruiter } from './sprites';
+import { drawVisitor } from './sprites';
 
 // ---------------------------------------------------------------------------
 // Cozy, warm, Moonlighter-inspired interior "portfolio room".
@@ -78,7 +78,17 @@ function drawAboutStand(vp: Viewport, x: number, y: number): void {
   const fy = y - 6 - fh;
   R(ctx, fx - 2, fy - 2, fw + 4, fh + 4, P.wood.mid);
   R(ctx, fx - 2, fy - 2, fw + 4, 2, P.wood.light); // top highlight edge
+  // 1px frame bevel: lit left, shaded bottom-right, so the wood reads molded
+  R(ctx, fx - 2, fy - 2, 1, fh + 4, P.wood.light);
+  R(ctx, fx + fw + 1, fy - 2, 1, fh + 4, P.wood.dark);
+  R(ctx, fx - 2, fy + fh + 1, fw + 4, 1, P.wood.dark);
   R(ctx, fx, fy, fw, fh, '#EDE6F4'); // soft lavender mat
+  // soft inner mat drop-shadow (top-left) so the portrait sits recessed in the mat
+  ctx.save();
+  ctx.globalAlpha = 0.2;
+  R(ctx, fx, fy, fw, 1, '#B6A6CE');
+  R(ctx, fx, fy, 1, fh, '#B6A6CE');
+  ctx.restore();
   // bust silhouette (reads as "profile / person")
   ctx.fillStyle = P.accent.indigo;
   ctx.beginPath();
@@ -86,6 +96,7 @@ function drawAboutStand(vp: Viewport, x: number, y: number): void {
   ctx.fill();
   R(ctx, fx + 5, fy + 19, fw - 10, 9, P.accent.indigo); // shoulders
   R(ctx, x - 3, fy + 9, 2, 2, 'rgba(255,255,255,0.4)'); // cheek catch-light
+  R(ctx, x - 4, fy + 8, 1, 4, 'rgba(255,255,255,0.3)'); // 1px bust rim highlight (lit left)
   R(ctx, fx + 4, fy + fh - 4, fw - 8, 2, '#C9B8E2'); // little nameplate bar
 }
 
@@ -138,7 +149,7 @@ export function drawStudio(vp: Viewport, world: { player: Entity; drinking?: boo
   drawEasel(vp, 295, '#4FBEBE', P.accent.teal);
   drawEasel(vp, 380, '#4FBEBE', P.accent.teal);
 
-  drawRecruiter(vp, world.player, world.drinking ?? false, world.drinkT ?? 0);
+  drawVisitor(vp, world.player, world.drinking ?? false, world.drinkT ?? 0);
 
   // gentle inward vignette (never dark — corners only)
   drawVignette(vp);
@@ -216,6 +227,11 @@ function drawArcadeCabinet(vp: Viewport, x: number, y: number): void {
   R(ctx, fx, fy, fw, 7, '#2E2438');
   R(ctx, fx + 1, fy + 1, fw - 2, 5, '#F2E4C4');
   R(ctx, fx + 1, fy + 1, fw - 2, 1, '#FFF4DA');
+  // 1px recess shadow under the marquee so the lightbox sits proud of the body
+  ctx.save();
+  ctx.globalAlpha = 0.4;
+  R(ctx, fx, fy + 7, fw, 1, '#140E1E');
+  ctx.restore();
   if (!vp.reduced && 0.5 + 0.5 * Math.sin(t * 9.3) > 0.86) R(ctx, fx + 1, fy + 1, fw - 2, 1, '#FFFDF0');
   ctx.save();
   ctx.fillStyle = '#16685F';
@@ -241,8 +257,23 @@ function drawArcadeCabinet(vp: Viewport, x: number, y: number): void {
     for (let yy = sy + 1; yy < sy + sh; yy += 2) ctx.fillRect(sx, yy, sw, 1);
     ctx.restore();
   }
+  // tiny bezel corner screws so the CRT reads as a bolted-in tube
+  ctx.save();
+  ctx.globalAlpha = 0.7;
+  R(ctx, fx + 3, fy + 9, 1, 1, '#5A5048');
+  R(ctx, fr - 4, fy + 9, 1, 1, '#5A5048');
+  R(ctx, fx + 3, fy + 25, 1, 1, '#3A332C');
+  R(ctx, fr - 4, fy + 25, 1, 1, '#3A332C');
+  ctx.restore();
   pool(vp, sx + sw / 2, sy + sh / 2, 13, '#5FE0D0', vp.reduced ? 0.12 : 0.12 + 0.05 * Math.sin(t * 2.2));
   drawCabinetAttract(vp, sx, sy, sw, sh);
+  // a faint horizontal CRT glare bar sliding down the tube (static at top when reduced)
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.08;
+  const glareY = vp.reduced ? sy + 2 : sy + 1 + Math.round(((t * 6) % (sh - 2)));
+  R(ctx, sx, glareY, sw, 1, '#BFEFE8');
+  ctx.restore();
 
   // CONTROL DECK + joystick + four buttons (front face, lower)
   R(ctx, fx, fy + 28, fw, 5, '#3A2E48');
@@ -357,6 +388,11 @@ function drawFloor(ctx: CanvasRenderingContext2D): void {
       ctx.globalAlpha = 0.3;
       R(ctx, jx + 1, y, 1, 16, P.floor.seamHi); // lit right lip of the joint
       ctx.restore();
+      // a tiny dark nail hole near each butt-joint, just off the seam line
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      R(ctx, jx - 2, y + 3 + ((row * 5) % 8), 1, 1, P.floor.seam);
+      ctx.restore();
     }
     // subtle long grain dashes + occasional knot, all deterministic per row
     ctx.save();
@@ -367,12 +403,25 @@ function drawFloor(ctx: CanvasRenderingContext2D): void {
       R(ctx, gx, y + 3 + ((g * 5) % 9), gw, 1, P.floor.grain);
     }
     ctx.restore();
+    // sparse single-px dither so the flat plank rows do not read as solid bands
+    ctx.save();
+    for (let d = 0; d < 6; d++) {
+      const dx = 38 + ((row * 113 + d * 211) % 394);
+      const dy = y + 2 + ((row * 7 + d * 41) % 12);
+      ctx.globalAlpha = 0.15 + ((d * 3) % 3) * 0.02; // 0.15..0.19
+      R(ctx, dx, dy, 1, 1, d % 2 ? P.floor.plankSh : P.floor.seamHi);
+    }
+    ctx.restore();
     if (row % 4 === 1) {
       const kx = 64 + ((row * 97) % 320);
       ctx.save();
       ctx.globalAlpha = 0.34;
       R(ctx, kx, y + 6, 2, 2, P.floor.seam); // little knot
       R(ctx, kx, y + 6, 1, 1, P.floor.grain);
+      // a deeper shadow ring hugging the knot's shaded (bottom-right) side
+      ctx.globalAlpha = 0.22;
+      R(ctx, kx + 2, y + 6, 1, 3, P.floor.seam);
+      R(ctx, kx, y + 8, 3, 1, P.floor.seam);
       ctx.restore();
     }
     row++;
@@ -383,11 +432,16 @@ function drawFloor(ctx: CanvasRenderingContext2D): void {
 // light pool (additive) with a brighter core wedge, all clipped to its shape.
 function drawWindowSpill(vp: Viewport): void {
   const ctx = vp.ctx;
+  // The studio is interior-lit, but the WINDOW tracks the sky: warm golden spill by
+  // day, dimmer cool moonlight at night, so stepping inside still feels like the same
+  // time of day. (env.sun.up: 1 = noon, 0 = deep night.)
+  const sun = vp.env ? vp.env.sun.up : 1;
+  const warm = sun > 0.28;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  // wide soft wash
-  ctx.globalAlpha = 0.09;
-  ctx.fillStyle = P.glowKit.window;
+  // wide soft wash — fades + cools toward moonlight at night (never fully off)
+  ctx.globalAlpha = 0.09 * (0.45 + 0.55 * sun);
+  ctx.fillStyle = warm ? P.glowKit.window : '#A9C2EC';
   ctx.beginPath();
   ctx.moveTo(38, 124);
   ctx.lineTo(38, 168);
@@ -395,9 +449,9 @@ function drawWindowSpill(vp: Viewport): void {
   ctx.lineTo(120, 150);
   ctx.closePath();
   ctx.fill();
-  // brighter inner wedge for a crisp sunbeam feel
-  ctx.globalAlpha = vp.reduced ? 0.08 : 0.12;
-  ctx.fillStyle = P.lamp.glow;
+  // brighter inner wedge for a crisp sunbeam (cool, fainter at night)
+  ctx.globalAlpha = (vp.reduced ? 0.08 : 0.12) * (0.4 + 0.6 * sun);
+  ctx.fillStyle = warm ? P.lamp.glow : '#BAD0F2';
   ctx.beginPath();
   ctx.moveTo(44, 128);
   ctx.lineTo(44, 156);
@@ -444,6 +498,26 @@ function drawRug(ctx: CanvasRenderingContext2D, x: number, y: number, w: number,
   ctx.globalAlpha = 0.08;
   for (let sx = x + 16; sx < x + w - 14; sx += 3) R(ctx, sx, y + 14, 1, h - 28, '#3CA199');
   ctx.restore();
+  // crosswise weft threads over the warp so the weave reads as a real grid, not stripes
+  ctx.save();
+  ctx.globalAlpha = 0.1;
+  for (let sy = y + 16; sy < y + h - 14; sy += 3) R(ctx, x + 14, sy, w - 28, 1, '#1E6A63');
+  ctx.restore();
+  // light nap dither so the field is not a flat panel
+  ctx.save();
+  for (let n = 0; n < 18; n++) {
+    const nx = x + 14 + ((n * 71) % (w - 28));
+    const ny = y + 14 + ((n * 53) % (h - 28));
+    ctx.globalAlpha = 0.06 + ((n * 5) % 3) * 0.02; // 0.06..0.10
+    R(ctx, nx, ny, 1, 1, n % 2 ? '#3CA199' : '#1E6A63');
+  }
+  ctx.restore();
+  // a soft 1-2px inner edge shadow so the field sits below the braided border
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  R(ctx, x + 4, y + 4, w - 8, 1, '#164E48');
+  R(ctx, x + 4, y + 4, 1, h - 8, '#164E48');
+  ctx.restore();
   // woven dash pattern along the field band (deterministic, calm)
   ctx.save();
   ctx.globalAlpha = 0.4;
@@ -478,6 +552,12 @@ function drawDoormat(ctx: CanvasRenderingContext2D, x: number, y: number): void 
   ctx.globalAlpha = 0.3;
   for (let wx = x + 5; wx < x + 46; wx += 4) R(ctx, wx, y + 2, 1, 12, P.rug.base); // coir weave
   ctx.restore();
+  // a subtle worn center stripe where feet land most (slightly darker, baked)
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  R(ctx, x + 16, y + 4, 18, 8, '#164E48');
+  R(ctx, x + 16, y + 4, 18, 1, '#123E39'); // a touch deeper at its lit edge
+  ctx.restore();
   // golden motif: a centred diamond flanked by two short bars (varied, not 3 identical bars)
   R(ctx, x + 7, y + 8, 8, 1, P.accent.golden);
   R(ctx, x + 35, y + 8, 8, 1, P.accent.golden);
@@ -507,15 +587,31 @@ function drawWalls(ctx: CanvasRenderingContext2D): void {
     ctx.globalAlpha = 0.25;
     R(ctx, px + 1, 22, 1, 11, wallHi); // lit right lip of the recess
     R(ctx, px - 13, 22, 1, 11, wallHi);
+    // 1px corner bevels on the panel inset: lit top-left, shadow bottom-right
+    ctx.globalAlpha = 0.3;
+    R(ctx, px - 13, 22, 1, 1, wallHi); // top-left lit corner
+    R(ctx, px - 14, 22, 2, 1, wallHi); // top edge catch
+    ctx.globalAlpha = 0.32;
+    R(ctx, px, 32, 1, 1, wallSh); // bottom-right shadow corner
+    R(ctx, px - 1, 32, 2, 1, wallSh); // bottom edge shade
     ctx.restore();
   }
+  // faint horizontal plaster striations so the body reads troweled, not painted-flat
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  for (let st = 0; st < 4; st++) {
+    const stx = 24 + ((st * 173) % 200);
+    const stw = 80 + ((st * 47) % 120);
+    R(ctx, stx, 25 + ((st * 17) % 6), stw, 1, st % 2 ? wallSh : wallHi);
+  }
+  ctx.restore();
   // very faint scattered wall speckle texture so the plaster reads hand-finished
   ctx.save();
-  for (let s = 0; s < 22; s++) {
-    ctx.globalAlpha = 0.08 + ((s * 7) % 5) * 0.01; // 0.08..0.12
+  for (let s = 0; s < 26; s++) {
+    ctx.globalAlpha = 0.07 + ((s * 13) % 7) * 0.012; // 0.07..0.142 (more variance)
     const spx = 26 + ((s * 197) % 418);
-    const spy = 24 + ((s * 53) % 8);
-    R(ctx, spx, spy, 1, 1, s % 2 ? wallSh : wallHi);
+    const spy = 24 + ((s * 53) % 9);
+    R(ctx, spx, spy, 1, 1, s % 3 === 0 ? wallHi : wallSh);
   }
   ctx.restore();
   // --- LEFT wall ---
@@ -615,6 +711,10 @@ function drawCounter(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   R(ctx, x, y, w, 4, P.wood.light); // lit top surface
   R(ctx, x, y, w, 1, '#D6A468'); // bright front lip
   R(ctx, x, y + 3, w, 1, P.accent.teal); // thin teal inlay
+  ctx.save();
+  ctx.globalAlpha = 0.4;
+  R(ctx, x, y + 3, w, 1, '#5CC9BE'); // 1px top-lit shine on the teal inlay
+  ctx.restore();
   R(ctx, x, y + 4, w, 23, P.wood.mid); // front face
   // subtle deterministic wood grain across the front face (floor-grain logic)
   ctx.save();
@@ -624,6 +724,22 @@ function drawCounter(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
     const gw = 9 + ((g * 29) % 12);
     R(ctx, gx, y + 9 + ((g * 19) % 11), gw, 1, P.floor.grain);
   }
+  ctx.restore();
+  // a couple of darker wood knots on the face (deterministic placement)
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  for (let k = 0; k < 2; k++) {
+    const kx = x + 70 + k * 180;
+    const ky = y + 12 + (k % 2) * 6;
+    R(ctx, kx, ky, 2, 2, P.wood.dark);
+    R(ctx, kx + 2, ky, 1, 2, P.wood.dark); // shaded right of knot
+    R(ctx, kx, ky + 2, 2, 1, P.wood.dark);
+  }
+  ctx.restore();
+  // a faint long scuff line across the lower face (use-wear)
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  R(ctx, x + 40, y + 18, w - 90, 1, P.wood.dark);
   ctx.restore();
   ctx.save();
   ctx.globalAlpha = 0.22;
@@ -637,6 +753,11 @@ function drawCounter(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   ctx.restore();
   // recessed panel divisions with lit/shadow edges
   for (let i = x + 44; i < x + w; i += 58) {
+    // faint grime shadow hugging the divider (settled-in dirt at the seam)
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    R(ctx, i - 1, y + 6, 1, 18, P.wood.dark);
+    ctx.restore();
     R(ctx, i, y + 6, 2, 18, P.wood.dark);
     R(ctx, i + 2, y + 6, 1, 18, P.wood.light);
     // panel inset between dividers (faint frame)
@@ -662,10 +783,22 @@ function drawWaterCooler(vp: Viewport, x: number, y: number, drinking: boolean, 
   R(ctx, x, y + 14, 18, 3, '#F2EEE6');
   R(ctx, x, y + 14, 3, 32, '#D2CCBE');
   R(ctx, x, y + 43, 18, 3, '#C9C3B5');
+  // 1px cylindrical highlight down the lit (left-inner) edge so the body reads round
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  R(ctx, x + 3, y + 17, 1, 26, '#FBFAF6');
+  ctx.restore();
   // inverted water bottle on top
   R(ctx, x + 2, y, 14, 16, '#7FC9D6');
   R(ctx, x + 2, y, 14, 4, '#A9E0E8');
   R(ctx, x + 5, y - 3, 8, 4, '#5FA9B0');
+  // faint vertical fluting on the bottle so it reads as ribbed plastic
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  R(ctx, x + 5, y + 4, 1, 11, '#A9E0E8');
+  R(ctx, x + 9, y + 4, 1, 11, '#5FA9B0');
+  R(ctx, x + 12, y + 4, 1, 11, '#A9E0E8');
+  ctx.restore();
   // taps + drip tray
   R(ctx, x + 4, y + 22, 3, 4, '#3A6E8C');
   R(ctx, x + 11, y + 22, 3, 4, '#9A3A2A');
@@ -785,10 +918,25 @@ function drawEasel(vp: Viewport, x: number, screen: string, glow: string): void 
   R(ctx, x - 25, y - 12, 1, 32, '#3C372E'); // left edge highlight
   R(ctx, x + 24, y - 12, 1, 32, '#15120D'); // right edge shadow
   R(ctx, x - 25, y + 19, 50, 1, '#15120D'); // bottom edge shadow
+  // 1px inner bevel framing the screen recess (lit top-left, shadow bottom-right)
+  ctx.save();
+  ctx.globalAlpha = 0.25;
+  R(ctx, x - 23, y - 10, 46, 1, '#15120D'); // inner top shade (recess lip)
+  R(ctx, x - 23, y - 10, 1, 28, '#15120D'); // inner left shade
+  ctx.globalAlpha = 0.2;
+  R(ctx, x - 23, y + 17, 46, 1, '#4A443A'); // inner bottom lit
+  R(ctx, x + 22, y - 10, 1, 28, '#3C372E'); // inner right lit
+  ctx.restore();
 
   // --- monitor neck connecting bezel to the brass base plate ---
   R(ctx, x - 2, y + 20, 4, 2, P.metal.base);
   R(ctx, x - 2, y + 20, 1, 2, P.metal.hi); // lit left of neck
+  // a small stand foot + faint cable hint trailing down behind the plate
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  R(ctx, x + 1, y + 24, 1, 4, '#1C160F'); // cable hint
+  R(ctx, x + 1, y + 27, 3, 1, '#1C160F');
+  ctx.restore();
 
   // --- screen recess ---
   const sx = x - 22,
@@ -798,6 +946,14 @@ function drawEasel(vp: Viewport, x: number, screen: string, glow: string): void 
   R(ctx, sx, sy, sw, sh, screen); // screen base tint
   // per-product mockup
   drawScreenMockup(ctx, vp, x, sx, sy, sw, sh);
+  // faint CRT scanlines over the mockup so the screen reads as an emissive panel
+  if (!vp.reduced) {
+    ctx.save();
+    ctx.globalAlpha = 0.07;
+    ctx.fillStyle = '#000000';
+    for (let yy = sy + 1; yy < sy + sh; yy += 2) ctx.fillRect(sx, yy, sw, 1);
+    ctx.restore();
+  }
   // glass sheen: a 1px lit top + a soft diagonal glare, then screen glow
   ctx.save();
   ctx.globalAlpha = 0.32;
@@ -987,11 +1143,19 @@ function drawCareerWall(ctx: CanvasRenderingContext2D, x: number, y: number): vo
   R(ctx, x + 3, y + 3, 72, 1, '#B89868'); // top inner shade (recessed)
   R(ctx, x + 3, y + 3, 1, 40, '#B89868');
   ctx.save();
-  ctx.globalAlpha = 0.25;
-  for (let s = 0; s < 14; s++) {
+  for (let s = 0; s < 26; s++) {
     const sxp = x + 6 + ((s * 37) % 66);
     const syp = y + 6 + ((s * 53) % 34);
+    ctx.globalAlpha = 0.18 + ((s * 7) % 4) * 0.03; // 0.18..0.27 varied
     R(ctx, sxp, syp, 1, 1, '#A88454');
+  }
+  // a few deeper 1-2px dimple spots so the cork reads pitted, not just speckled
+  ctx.globalAlpha = 0.3;
+  for (let d = 0; d < 4; d++) {
+    const dxp = x + 10 + ((d * 191) % 60);
+    const dyp = y + 8 + ((d * 113) % 30);
+    R(ctx, dxp, dyp, 2, 1, '#8A6A3E');
+    R(ctx, dxp, dyp + 1, 1, 1, '#8A6A3E');
   }
   ctx.restore();
   // 3 phase pin-cards (Sales / HR / AI-Dev tints)
@@ -1000,6 +1164,11 @@ function drawCareerWall(ctx: CanvasRenderingContext2D, x: number, y: number): vo
   for (let i = 0; i < 3; i++) {
     const cx = x + 8 + i * 24;
     R(ctx, cx + 1, y + 25, 16, 13, P.shadowSoft); // tiny card shadow
+    // 1px lift-shadow directly under the card so it reads as raised off the cork
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    R(ctx, cx + 1, y + 37, 16, 1, P.wood.dark);
+    ctx.restore();
     R(ctx, cx, y + 24, 16, 13, tints[i]);
     R(ctx, cx, y + 24, 16, 2, '#ffffff'); // lit top of note
     R(ctx, cx, y + 35, 16, 1, deeps[i]); // shaded base of note
@@ -1016,6 +1185,14 @@ function drawCareerWall(ctx: CanvasRenderingContext2D, x: number, y: number): vo
     R(ctx, cx, y + 6, 22, 14, P.surface.white);
     R(ctx, cx, y + 6, 22, 1, '#ffffff');
     R(ctx, cx, y + 19, 22, 1, P.surface.line); // shaded base
+    // 1px inner bevel so the slot reads recessed: shaded top-left, lit bottom-right
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    R(ctx, cx + 1, y + 7, 20, 1, P.surface.line); // inner top shade
+    R(ctx, cx + 1, y + 7, 1, 12, P.surface.line); // inner left shade
+    ctx.globalAlpha = 0.6;
+    R(ctx, cx + 1, y + 18, 20, 1, '#ffffff'); // inner bottom lit
+    ctx.restore();
     ctx.strokeStyle = P.surface.line;
     ctx.lineWidth = 1;
     ctx.strokeRect(cx + 0.5, y + 6.5, 21, 13);
@@ -1080,8 +1257,14 @@ function drawDeskAndBook(vp: Viewport, x: number, y: number): void {
   // --- desk body: lit top, shaded apron, legs ---
   R(ctx, x, y, 54, 30, P.wood.mid);
   R(ctx, x, y, 54, 5, P.wood.light); // lit top surface
+  // soft edge shade on the desktop ends so the lit top reads as a curved surface
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  R(ctx, x, y, 3, 5, P.wood.mid); // left end falls into shade
+  R(ctx, x + 51, y, 3, 5, P.wood.dark); // right end (shadow side)
+  ctx.restore();
   R(ctx, x, y + 4, 54, 1, P.accent.teal); // thin teal inlay (matches counter)
-  // subtle deterministic wood grain on the apron (echoes the floor-grain logic)
+  // subtle deterministic wood grain on the apron + a couple top-surface ticks
   ctx.save();
   ctx.globalAlpha = 0.16;
   for (let g = 0; g < 4; g++) {
@@ -1089,6 +1272,9 @@ function drawDeskAndBook(vp: Viewport, x: number, y: number): void {
     const gw = 6 + ((g * 17) % 8);
     R(ctx, gx, y + 8 + ((g * 23) % 14), gw, 1, P.floor.grain);
   }
+  ctx.globalAlpha = 0.1;
+  R(ctx, x + 14, y + 2, 12, 1, P.floor.grain); // faint top-surface grain
+  R(ctx, x + 30, y + 1, 9, 1, P.floor.grain);
   ctx.restore();
   R(ctx, x, y + 26, 54, 4, P.wood.dark); // base shadow apron
   R(ctx, x + 4, y + 34, 6, 8, P.wood.dark);
@@ -1096,12 +1282,16 @@ function drawDeskAndBook(vp: Viewport, x: number, y: number): void {
   R(ctx, x + 44, y + 34, 6, 8, P.wood.dark);
 
   // --- desk-top props (off to the sides, board centered) ---
-  R(ctx, x + 4, y + 7, 9, 6, P.surface.white); // stacked papers
-  R(ctx, x + 4, y + 7, 9, 1, '#ffffff');
-  R(ctx, x + 5, y + 9, 6, 1, P.ink.faint);
-  R(ctx, x + 3, y + 8, 9, 1, P.surface.line); // second sheet edge
+  // an offset second sheet peeking under the top one (slightly skewed stack)
+  R(ctx, x + 3, y + 8, 9, 5, P.surface.line);
+  R(ctx, x + 5, y + 6, 9, 6, P.surface.white); // stacked papers (offset)
+  R(ctx, x + 5, y + 6, 9, 1, '#ffffff');
+  R(ctx, x + 6, y + 8, 6, 1, P.ink.faint);
+  R(ctx, x + 12, y + 6, 2, 2, P.surface.line); // a folded dog-ear corner
+  R(ctx, x + 12, y + 6, 1, 1, '#ffffff');
   R(ctx, x + 45, y + 6, 5, 7, P.accent.teal); // mug
   R(ctx, x + 45, y + 6, 5, 1, '#5CC9BE'); // mug rim light
+  R(ctx, x + 46, y + 7, 3, 1, P.accent.tealDeep); // hollow-rim inner shadow (open mug)
   R(ctx, x + 50, y + 8, 1, 3, P.accent.tealDeep); // mug handle
   R(ctx, x + 39, y + 5, 4, 8, P.wood.dark); // pencil cup
   R(ctx, x + 39, y + 4, 1, 2, P.accent.amber); // pencils
@@ -1145,6 +1335,13 @@ function drawTechShelf(vp: Viewport, x: number, y: number): void {
   ctx.save();
   ctx.globalAlpha = 0.4;
   for (let h = 0; h < 5; h++) R(ctx, x + 5 + h * 5, y - 5, 1, 1, P.wood.dark);
+  ctx.restore();
+  // faint pegboard grid lines so the board reads as perforated, not flat
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  R(ctx, x + 3, y - 5, 26, 1, P.wood.dark);
+  R(ctx, x + 3, y - 3, 26, 1, P.wood.dark);
+  for (let gx = x + 5; gx < x + 29; gx += 5) R(ctx, gx, y - 7, 1, 6, P.wood.dark);
   ctx.restore();
   R(ctx, x + 4, y - 7, 6, 6, P.surface.panel); // doc tile
   R(ctx, x + 4, y - 7, 6, 1, P.surface.white);
@@ -1190,6 +1387,12 @@ function drawTechShelf(vp: Viewport, x: number, y: number): void {
     const cx = x + 6 + (i % 3) * 7;
     const cy = y + 17 + Math.floor(i / 3) * 9;
     R(ctx, cx, cy, 6, 7, '#1A1712'); // tile slot recess
+    // 1px recessed inner shadow so each chip sits sunk into the rack
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    R(ctx, cx, cy, 6, 1, '#100B08'); // inner top shade
+    R(ctx, cx, cy, 1, 7, '#100B08'); // inner left shade
+    ctx.restore();
     // faint vertical separation between tiles in a row
     if (i % 3 !== 2) {
       ctx.save();
@@ -1202,32 +1405,11 @@ function drawTechShelf(vp: Viewport, x: number, y: number): void {
     // tiny status LED with offset per-tile blink timing (prime-spaced phases)
     const on = vp.reduced ? true : Math.sin(vp.t * 2 + i * 2.39) > -0.3;
     R(ctx, cx + 4, cy + 5, 1, 1, on ? P.accent.golden : '#3A2516');
+    // a tiny additive glow ring on a lit LED (reuses the cached pool helper)
+    if (on) pool(vp, cx + 4, cy + 5, 3, P.accent.golden, vp.reduced ? 0.16 : 0.2);
   }
 }
 
-// Slim floor lamp with a warm shade. Glow is baked as lit pixels (no vp here,
-// so no additive pass) but still reads warm; reduced-motion safe by nature.
-function drawFloorLamp(ctx: CanvasRenderingContext2D, x: number, y: number): void {
-  // contact shadow at the base
-  softShadow(ctx, x + 5, y + 30, 9, P.shadowSoft);
-  // weighted base, lit top-left
-  R(ctx, x, y + 28, 11, 3, P.wood.mid);
-  R(ctx, x, y + 28, 11, 1, P.wood.light);
-  R(ctx, x, y + 29, 1, 2, P.wood.light);
-  R(ctx, x + 9, y + 28, 2, 3, P.wood.dark);
-  // pole with a lit left edge
-  R(ctx, x + 4, y, 3, 28, P.metal.base);
-  R(ctx, x + 4, y, 1, 28, P.metal.hi);
-  R(ctx, x + 6, y, 1, 28, '#5E4632');
-  // conical shade: lit top-left, warm underside glow lip
-  R(ctx, x - 1, y - 8, 13, 10, P.glass.warm);
-  R(ctx, x, y - 9, 11, 1, P.glass.lit); // bright crown
-  R(ctx, x - 1, y - 8, 13, 2, P.glass.lit); // lit top band
-  R(ctx, x - 1, y - 8, 1, 10, P.glass.reflect); // lit left edge
-  R(ctx, x + 11, y - 8, 1, 10, '#C98A4B'); // shaded right edge
-  R(ctx, x - 1, y + 1, 13, 1, P.lamp.glow); // warm glow lip at the shade mouth
-  R(ctx, x + 1, y - 4, 3, 2, P.glass.reflect); // bright catch on the shade
-}
 
 function drawPotPlant(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   // the two planters differ slightly (scale + tint) so they feel placed, not
@@ -1242,6 +1424,16 @@ function drawPotPlant(ctx: CanvasRenderingContext2D, x: number, y: number): void
   R(ctx, x, y + 10, 2, 8, P.wood.light);
   R(ctx, x + 16, y + 10, 2, 8, P.wood.dark);
   R(ctx, x, y + 16, 18, 2, P.wood.dark);
+  // 1px rim reflection along the lit lip so the planter reads as a rounded vessel
+  ctx.save();
+  ctx.globalAlpha = 0.45;
+  R(ctx, x + 2, y + 10, 12, 1, '#E0B87A');
+  ctx.restore();
+  // a dark soil line just inside the pot opening
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  R(ctx, x + 3, y + 11, 12, 1, '#3A2616');
+  ctx.restore();
   // layered leaves (dark base, lit left, shaded right) for a fuller bush
   R(ctx, x + 2, y - (lift >> 1), 5, 11 + (lift >> 1), P.plant.dark);
   R(ctx, x + 7, y - 3 - lift, 5, 14 + lift, P.plant.base);
@@ -1249,6 +1441,12 @@ function drawPotPlant(ctx: CanvasRenderingContext2D, x: number, y: number): void
   R(ctx, x + 7, y - 3 - lift, 2, 5, catchHi); // top-left leaf catch
   R(ctx, x + 4, y + 1, 1, 8, P.plant.base); // inner left frond
   R(ctx, x + 13, y + 2, 1, 8, P.plant.dark); // shaded right frond
+  // 1-2px central leaf vein lines so the foliage reads as blades, not a mass
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  R(ctx, x + 9, y - 1 - lift, 1, 10 + lift, P.plant.dark);
+  R(ctx, x + 4, y + 2, 1, 6, P.plant.hi);
+  ctx.restore();
   if (alt) R(ctx, x + 9, y - 5, 1, 5, P.plant.hi); // a lone tall sprig (variation)
 }
 
@@ -1260,6 +1458,13 @@ function drawFern(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   R(ctx, x + 2, y + 22, 2, 10, P.wood.light);
   R(ctx, x + 14, y + 22, 2, 10, P.wood.dark);
   R(ctx, x + 2, y + 30, 14, 2, P.wood.dark);
+  // 1px rim reflection + a dark soil line at the pot opening
+  ctx.save();
+  ctx.globalAlpha = 0.45;
+  R(ctx, x + 4, y + 22, 9, 1, '#E0B87A');
+  ctx.globalAlpha = 0.5;
+  R(ctx, x + 4, y + 23, 10, 1, '#3A2616');
+  ctx.restore();
   // arching fronds: dark base, lit left, shaded right + a few leaf ticks
   R(ctx, x, y, 5, 24, P.plant.dark);
   R(ctx, x + 5, y - 4, 6, 28, P.plant.base);
@@ -1267,6 +1472,13 @@ function drawFern(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   R(ctx, x + 5, y - 4, 2, 10, '#6CB85C'); // top-left frond catch
   R(ctx, x + 1, y + 4, 1, 16, P.plant.base); // outer left blade
   R(ctx, x + 14, y + 4, 1, 16, P.plant.dark); // outer right blade
+  // central leaf vein lines down the main fronds
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  R(ctx, x + 7, y - 2, 1, 22, P.plant.dark);
+  R(ctx, x + 2, y + 2, 1, 18, P.plant.hi);
+  R(ctx, x + 13, y + 2, 1, 18, P.plant.dark);
+  ctx.restore();
 }
 
 // Slim clip-on desk lamp tucked at the resume desk's left edge, with a tiny
@@ -1283,11 +1495,18 @@ function drawDeskLamp(vp: Viewport, x: number, y: number): void {
   R(ctx, x + 3, y + 6, 1, 14, P.metal.hi);
   R(ctx, x + 4, y + 5, 9, 2, P.metal.base);
   R(ctx, x + 4, y + 5, 9, 1, P.metal.hi);
+  // 1px shadow at the base joint + elbow so the arm reads as hinged segments
+  ctx.save();
+  ctx.globalAlpha = 0.4;
+  R(ctx, x + 3, y + 19, 2, 1, '#4A382A'); // base joint shade
+  R(ctx, x + 4, y + 6, 1, 1, '#4A382A'); // elbow shade
+  ctx.restore();
   // angled conical head pointing down at the desk
   R(ctx, x + 10, y + 6, 7, 5, P.accent.amber);
   R(ctx, x + 10, y + 6, 7, 1, P.accent.golden); // lit top of shade
   R(ctx, x + 10, y + 6, 1, 5, P.accent.golden); // lit left
   R(ctx, x + 16, y + 6, 1, 5, '#B5471F'); // shaded right
+  R(ctx, x + 11, y + 7, 2, 1, '#FFF0C8'); // 2x1 catch-light on the shade
   R(ctx, x + 11, y + 10, 5, 1, P.lamp.glow); // warm bulb lip
   // tiny warm glow under the head (additive): lowered so it is no longer a hot
   // spot, breathing on the unified vp.t*1.5 time base
@@ -1310,6 +1529,14 @@ function drawWallDecor(vp: Viewport): void {
   R(ctx, cx - 7, cy - 7, 14, 1, P.wood.mid);
   R(ctx, cx - 6, cy - 6, 12, 12, P.surface.panel); // face
   R(ctx, cx - 6, cy - 6, 12, 1, P.surface.white);
+  // 1px recessed bevel inside the rim so the face reads sunk behind glass
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  R(ctx, cx - 6, cy - 6, 12, 1, P.wood.dark); // inner top shade
+  R(ctx, cx - 6, cy - 6, 1, 12, P.wood.dark); // inner left shade
+  ctx.globalAlpha = 0.4;
+  R(ctx, cx - 6, cy + 5, 12, 1, P.surface.white); // inner bottom lit
+  ctx.restore();
   // tick marks (12/3/6/9)
   R(ctx, cx, cy - 5, 1, 1, P.ink.faint);
   R(ctx, cx, cy + 4, 1, 1, P.ink.faint);
@@ -1347,6 +1574,7 @@ function drawWallDecor(vp: Viewport): void {
     // a tiny gold seal + caption lines (a certificate)
     R(ctx, fx - 1, cy - 4, 3, 3, P.accent.golden);
     R(ctx, fx, cy - 3, 1, 1, P.accent.amber);
+    R(ctx, fx - 1, cy - 4, 1, 1, '#ffffff'); // 1px white shine on the seal
     ctx.save();
     ctx.globalAlpha = 0.6;
     R(ctx, fx - 4, cy + 1, 8, 1, P.ink.faint);
@@ -1374,6 +1602,8 @@ function drawCozyProps(ctx: CanvasRenderingContext2D): void {
     R(ctx, bx + i, byy, bw, 3, spines[i]);
     R(ctx, bx + i, byy, bw, 1, 'rgba(255,255,255,0.35)'); // lit top of book
     R(ctx, bx + i, byy, 1, 3, 'rgba(255,255,255,0.25)'); // lit spine left
+    // a 1px peeking page block on the fore-edge so each book reads as paper, not a slab
+    R(ctx, bx + i + bw - 1, byy + 1, 1, 2, '#F2EAD6');
   }
   // a small mug beside the books
   R(ctx, bx + 16, by + 3, 5, 5, P.surface.panel);
@@ -1393,6 +1623,8 @@ function drawCozyProps(ctx: CanvasRenderingContext2D): void {
     ctx.rotate(tilts[i]);
     ctx.translate(-(nx + 4.5), -(ny + 4.5));
     ctx.save();
+    ctx.globalAlpha = 0.2;
+    R(ctx, nx + 1, ny + 1, 9, 9, P.shadow); // soft lift shadow under the raised note
     ctx.globalAlpha = 0.4;
     R(ctx, nx + 1, ny + 9, 9, 1, P.shadowSoft);
     ctx.restore();

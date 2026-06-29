@@ -105,5 +105,5 @@ export const PHASES: Phase[] = [
   },
 ];
 
-export const EDUCATION = 'University of Bahrain, BSc Business Management (Marketing)';
+export const EDUCATION = 'University of Bahrain, BSc Business Management (Marketing), 2025';
 export const LINKEDIN = 'https://linkedin.com/in/sayed-jehad-saeed-1729b3150';

@@ -1,7 +1,7 @@
 import { LINKEDIN } from './roles';
 
 // Sayed's personal story and how to reach him: the "About Me" + Contact beat.
-// Journey-first and honest, so a recruiter understands who he is and why his
+// Journey-first and honest, so a visitor understands who he is and why his
 // path matters, then has a clear way to act. Edit freely.
 export const ABOUT = {
   eyebrow: 'Who I am',

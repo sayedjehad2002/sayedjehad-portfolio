@@ -146,7 +146,7 @@ function drawZoneGuides(vp: Viewport, alpha: number): void {
 // outline and a soft accent halo behind it, so every hotspot reads as an
 // obvious "interact here" beacon. The distance fade only kicks in close up,
 // where the active card takes over — far away the marker stays fully readable
-// (alpha floored high) so recruiters can spot every hotspot across the room.
+// (alpha floored high) so visitors can spot every hotspot across the room.
 // ---------------------------------------------------------------------------
 const haloCache = new Map<string, CanvasGradient>(); // one halo gradient per accent colour (built at origin)
 function drawMarker(vp: Viewport, it: Interactable, player: Entity): void {

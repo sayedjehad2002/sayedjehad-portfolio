@@ -70,7 +70,7 @@ function PromoteStep({ phase }: { phase: PhaseKey }) {
 function RoleBlock({ r, step, total }: { r: FlatRole; step: number; total: number }) {
   const showStep = total > 1;
   return (
-    <div className={`rounded-xl border bg-white/70 p-3 transition-colors duration-150 hover:border-teal/50 hover:bg-white ${BORDER[r.phase]}`}>
+    <div className={`rounded-xl border bg-white/70 p-3 transition-[colors,transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:border-teal/50 hover:bg-white hover:shadow-chip ${BORDER[r.phase]}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">

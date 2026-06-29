@@ -216,7 +216,7 @@ export function ConversationPanel() {
         >
           {/* Header */}
           <div className="flex items-stretch gap-3">
-            <div className="h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl border-2 border-amber bg-[#3E5A52] shadow-[inset_0_0_0_2px_rgba(255,255,255,0.18)]">
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 border-amber bg-[#3E5A52] shadow-[inset_0_0_0_2px_rgba(255,255,255,0.18)] sm:h-[88px] sm:w-[88px]">
               <GuidePortrait />
             </div>
             <div className="flex min-w-0 flex-1 flex-col justify-center">
@@ -258,7 +258,14 @@ export function ConversationPanel() {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <div ref={answerRef} tabIndex={-1} onClick={reveal} className="flex cursor-default flex-col gap-3 outline-none">
+                <div
+                  ref={answerRef}
+                  tabIndex={-1}
+                  onClick={reveal}
+                  className={`-mx-2 flex flex-col gap-3 rounded-xl px-2 py-1 outline-none transition-colors ${
+                    typing ? 'cursor-pointer hover:bg-teal/5' : 'cursor-default'
+                  }`}
+                >
                   <p className="font-sans text-[13px] italic text-ink-soft">&ldquo;{asked?.q ?? ''}&rdquo;</p>
                   <p className="whitespace-pre-line font-sans text-[16px] leading-[1.6] text-ink">
                     {fullAnswer.slice(0, shown)}

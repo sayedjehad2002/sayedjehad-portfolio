@@ -1,4 +1,5 @@
 import type { Vec } from './types';
+import type { EnvState } from './env/EnvironmentTimeSystem';
 
 // A snapshot of everything a draw function needs to paint one frame.
 export interface Viewport {
@@ -10,6 +11,9 @@ export interface Viewport {
   vh: number;
   t: number; // seconds (animation clock)
   reduced: boolean;
+  // Day/night + atmosphere snapshot (optional so older call sites still type-check;
+  // when absent, draw modules fall back to today's fixed warm-day look).
+  env?: EnvState;
 }
 
 export function pix(size: number): string {
@@ -60,6 +64,32 @@ export function softShadow(ctx: CanvasRenderingContext2D, x: number, y: number, 
   ctx.beginPath();
   ctx.ellipse(x, y, rx, rx * 0.42, 0, 0, Math.PI * 2);
   ctx.fill();
+}
+
+// Sun-aware contact shadow: leans away from the sun and stretches long at golden
+// hour (sun low but present), stays short under a high noon sun, and fades to a
+// faint near-centred blob at night (no sun). Falls back to a plain softShadow when
+// there's no env or shadows are disabled, so the daytime look is unchanged.
+export function groundShadow(vp: Viewport, x: number, y: number, rx: number, color: string): void {
+  const ctx = vp.ctx;
+  const env = vp.env;
+  if (!env || !env.enabled || env.shadowQuality === 'off') {
+    softShadow(ctx, x, y, rx, color);
+    return;
+  }
+  const up = Math.max(0, env.sun.up); // 1 noon, 0 night
+  const cast = Math.sqrt(up) * (1 - up); // 0 at night, peak at dawn/dusk, ~0 at noon
+  const dir = (env.sun.x - 0.5) * -2; // shadow falls away from the sun (-1..1)
+  const lenK = env.shadowQuality === 'high' ? 1 : 0.6;
+  const stretch = 1 + cast * 1.6 * lenK;
+  const offX = dir * rx * cast * 1.4 * lenK;
+  ctx.save();
+  ctx.globalAlpha = 0.5 + 0.5 * up; // crisp by day, fainter at night
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(x + offX, y, rx * stretch, rx * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 // ---------------------------------------------------------------------------

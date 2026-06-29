@@ -14,9 +14,14 @@ import { drawPlaza } from './draw/plaza';
 import { drawStudio } from './draw/studio';
 import { drawHud } from './draw/hud';
 import { useUiStore } from '../store/uiStore';
+import { useEnvConfig } from '../store/envConfig';
+import { useProgress, type Station } from '../store/progressStore';
+import { computeEnv, type EnvState } from './env/EnvironmentTimeSystem';
+import { drawDayNightTint, drawLightWash } from './env/sky';
+import { drawWeather } from './env/weather';
 import { DIALOGUE } from '../data/dialogue';
 import { LOST_ONE_CONVERSATION } from '../data/lostone';
-import { blip, chime, chirp } from './audio';
+import { blip, chime, chirp, ambientChirp, ambientCricket, step } from './audio';
 
 interface Transition {
   active: boolean;
@@ -54,6 +59,14 @@ export class Engine {
   private talking = false;
   private active: Interactable | null = null;
   private reduced = false;
+  // latest environment snapshot (set in render, read by update for bird gating)
+  private env: EnvState | null = null;
+  // procedural ambience scheduler (occasional day chirps / night crickets)
+  private ambientT = 0;
+  private ambientNext = 5;
+  // footstep cadence + kicked-up dust puffs at the feet (juice)
+  private stepT = 0;
+  private dust: Array<{ x: number; y: number; t: number }> = [];
   // water-cooler drink + "refreshed" flourish
   private drink = { active: false, t: 0 };
   private refresh = { active: false, t: 0, x: 0, y: 0 };
@@ -116,11 +129,13 @@ export class Engine {
     this.canvas.width = Math.floor(this.vw * this.dpr);
     this.canvas.height = Math.floor(this.vh * this.dpr);
     const { w, h } = this.world();
-    // Narrow portrait phones are very tall vs the world, so a floor of 3 crops the
-    // scene to a thin slice. Drop the floor to 2 on small viewports so more of the
-    // world is visible (still an integer scale, so pixel art stays crisp). Desktop
-    // (>=480 CSS px wide) keeps the original floor of 3, so the camera feel is unchanged.
-    const floor = this.vw < 480 ? 2 : 3;
+    // Small viewports are cramped vs the 480x432 world, so a floor of 3 crops the
+    // scene to a slice. Drop the floor to 2 when the viewport is narrow (portrait
+    // phones) OR short (landscape phones, where width is wide but height is small),
+    // so more of the world is visible (still an integer scale, so pixel art stays
+    // crisp). Desktop windows (>=480 CSS px wide AND tall) keep the original floor
+    // of 3, so the camera feel is unchanged.
+    const floor = this.vw < 480 || this.vh < 480 ? 2 : 3;
     const z = Math.max(floor, Math.ceil(Math.max(this.vw / w, this.vh / h)));
     this.zoom = Math.min(z, 6);
     this.ctx.imageSmoothingEnabled = false;
@@ -180,8 +195,11 @@ export class Engine {
       if (this.refresh.t >= 1.2) this.refresh.active = false;
     }
 
-    // ambient birds loop in the plaza; pause only during the scene swap
-    if (this.scene === 'plaza' && this.birds && !this.transition.active) {
+    // ambient birds loop in the plaza by day; they settle/vanish at night and when
+    // disabled (the draw side fades them out; here we just stop the flight loop +
+    // chirps so the courtyard goes quiet after dusk).
+    const birdsActive = !this.env || (this.env.birdsEnabled && this.env.sun.up > 0.12);
+    if (this.scene === 'plaza' && this.birds && !this.transition.active && birdsActive) {
       updateBirds(this.birds, dt, this.reduced);
       for (const b of this.birds.birds) {
         if (b.chirp) {
@@ -189,6 +207,24 @@ export class Engine {
           chirp();
         }
       }
+    }
+
+    // Gentle procedural ambience: an occasional soft day chirp / night cricket in the
+    // plaza, spaced out randomly so it never becomes a loop. Quiet + mute-respecting.
+    this.ambientT += dt;
+    if (this.ambientT >= this.ambientNext) {
+      this.ambientT = 0;
+      this.ambientNext = 6 + Math.random() * 9;
+      if (ui.started && this.scene === 'plaza' && this.env && useEnvConfig.getState().ambientAudioEnabled) {
+        if (this.env.sun.up > 0.2) ambientChirp();
+        else ambientCricket();
+      }
+    }
+
+    // age + cull the dust puffs
+    if (this.dust.length) {
+      for (const d of this.dust) d.t += dt;
+      if (this.dust.some((d) => d.t >= 0.5)) this.dust = this.dust.filter((d) => d.t < 0.5);
     }
 
     const interact = consumeInteract();
@@ -202,6 +238,17 @@ export class Engine {
       moveX(this.player, this.player.vx * dt, solids);
       moveY(this.player, this.player.vy * dt, solids);
       stepWalk(this.player, dt);
+      // soft footstep tick + a dust puff per stride while actually walking
+      if (this.player.moving && !this.reduced) {
+        this.stepT += dt;
+        if (this.stepT >= 0.32) {
+          this.stepT = 0;
+          step();
+          if (this.dust.length < 12) this.dust.push({ x: this.player.x + (Math.random() * 4 - 2), y: this.player.y - 1, t: 0 });
+        }
+      } else {
+        this.stepT = 0.32; // next step fires promptly when walking resumes
+      }
       const W = this.world();
       this.player.x = Math.max(8, Math.min(W.w - 8, this.player.x));
       this.player.y = Math.max(14, Math.min(W.h - 4, this.player.y));
@@ -232,6 +279,10 @@ export class Engine {
 
   private doInteract(it: Interactable): void {
     const ui = useUiStore.getState();
+    // Record discovery (drives the progress toast + the "let's connect" finale).
+    const station: Record<string, Station> = { talk: 'sayed', about: 'about', arcade: 'arcade', resume: 'resume', stack: 'stack', project: 'project' };
+    const st = station[it.type];
+    if (st) useProgress.getState().discover(st);
     switch (it.type) {
       case 'talk':
         this.talking = true;
@@ -294,12 +345,33 @@ export class Engine {
     snapClamp(this.cam, this.player, SCENES[to].w, SCENES[to].h, this.vw / this.zoom, this.vh / this.zoom);
   }
 
+  // Soft pale dust kicked up at the player's feet, expanding + fading (world-space).
+  private drawDust(): void {
+    const ctx = this.ctx;
+    ctx.save();
+    for (const d of this.dust) {
+      const k = d.t / 0.5; // 0..1 life
+      const r = 2 + k * 5;
+      ctx.globalAlpha = (1 - k) * 0.18;
+      ctx.fillStyle = '#C9AD84'; // pale paving dust
+      ctx.beginPath();
+      ctx.ellipse(d.x, d.y, r, r * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   private render(): void {
     const ui = useUiStore.getState();
     // The arcade is a full-bleed opaque overlay running its own loop; skip the world+HUD
     // repaint entirely while it covers the canvas. Cream modals/dialogue are translucent
     // over the world, so those keep rendering.
     if (ui.modal?.kind === 'arcade') return;
+    const now = performance.now() / 1000;
+    // One environment snapshot per frame, read from config + the Bahrain clock.
+    const envCfg = useEnvConfig.getState();
+    const env = computeEnv(envCfg, envCfg.debugTimeOfDay, now);
+    this.env = env; // cache for the next update() (bird day/night gating)
     const vp: Viewport = {
       ctx: this.ctx,
       cam: this.cam,
@@ -307,15 +379,26 @@ export class Engine {
       dpr: this.dpr,
       vw: this.vw,
       vh: this.vh,
-      t: performance.now() / 1000,
+      t: now,
       reduced: this.reduced,
+      env,
     };
 
     worldTransform(vp);
     if (this.scene === 'plaza') drawPlaza(vp, { player: this.player, npc: this.npc, lostOne: this.lostOne, door: this.door, birds: this.birds });
     else drawStudio(vp, { player: this.player, drinking: this.drink.active, drinkT: this.drink.t });
 
+    if (!this.reduced && this.dust.length) this.drawDust();
+
     screenTransform(vp);
+    // Day/night colour grade + sky (sun/moon/stars/clouds) over the world, BEFORE
+    // the HUD so chips/labels stay full-bright. Plaza only (the studio is interior).
+    // Tint first (darkens the scene), then the bright bodies punch through it.
+    if (this.scene === 'plaza') {
+      drawDayNightTint(vp);
+      drawLightWash(vp); // directional sun/moon light (no discs), over the grade
+      drawWeather(vp);
+    }
     // Surface a "talk to Sayed first" hint when the visitor reaches the still-closed door
     // before meeting Sayed, so the gate reads as intentional rather than an invisible wall.
     const nearClosedDoor =

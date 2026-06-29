@@ -14,7 +14,7 @@ export function TechPanel() {
         {STACK.map((t) => (
           <div
             key={t.name}
-            className="rounded-[10px] border border-line bg-sunken px-3 py-2.5 transition-colors duration-150 hover:border-teal/60 hover:bg-white"
+            className="rounded-[10px] border border-line bg-sunken px-3 py-2.5 transition-colors duration-150 hover:border-teal/50 hover:bg-white"
           >
             <div className="font-sans text-[13px] font-bold text-ink">{t.name}</div>
             <div className="font-sans text-[11px] text-ink-faint">{t.desc}</div>
